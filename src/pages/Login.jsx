@@ -1,0 +1,98 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { Bug, LogIn, Loader2, Eye, EyeOff } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+export default function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!email || !password) {
+      toast.error('Ingresa tu email y contraseña')
+      return
+    }
+    setLoading(true)
+    try {
+      await login(email, password)
+      toast.success('¡Bienvenido!')
+      navigate('/')
+    } catch (err) {
+      toast.error(err.message === 'Invalid login credentials'
+        ? 'Credenciales incorrectas'
+        : 'Error al iniciar sesión')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-900 via-primary-800 to-dark-900 px-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl shadow-lg shadow-primary-600/30 mb-4">
+            <Bug className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white">PlagControl</h1>
+          <p className="text-primary-300 mt-1">Sistema de Gestión de Control de Plagas</p>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <h2 className="text-xl font-bold text-dark-900 mb-6">Iniciar Sesión</h2>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="label-field" htmlFor="email">Correo electrónico</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="input-field"
+                placeholder="tu@email.com"
+                autoComplete="email"
+              />
+            </div>
+            <div>
+              <label className="label-field" htmlFor="password">Contraseña</label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="input-field pr-11"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+            <button type="submit" disabled={loading} className="btn-primary w-full py-3">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><LogIn className="w-5 h-5" /> Ingresar</>}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <a href="/portal" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+              ¿Eres cliente? Accede al portal →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
