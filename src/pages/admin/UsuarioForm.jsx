@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -56,9 +57,16 @@ export default function UsuarioForm() {
         if (error) throw error
         toast.success('Usuario actualizado')
       } else {
-        if (!form.email || !form.password) { toast.error('Email y contraseña son obligatorios'); setSaving(false); return }
+        // Fix: Create users without logging out admin
+        // We use a secondary client with persistSession: false
+        const tempSupabase = createClient(
+          import.meta.env.VITE_SUPABASE_URL,
+          import.meta.env.VITE_SUPABASE_ANON_KEY,
+          { auth: { persistSession: false } }
+        )
+
         // Create auth user with metadata
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await tempSupabase.auth.signUp({
           email: form.email,
           password: form.password,
           options: {
