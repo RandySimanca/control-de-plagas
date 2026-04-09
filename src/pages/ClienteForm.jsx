@@ -107,11 +107,11 @@ export default function ClienteForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label-field">Nombre / Empresa *</label>
-              <input className="input-field" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} placeholder="Ej: Juan Pérez o Hotel Central" />
+              <input className="input-field" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} placeholder="Ej: Juan Pérez" />
             </div>
             <div>
               <label className="label-field">Razón Social</label>
-              <input className="input-field" value={form.razon_social || ''} onChange={e => handleChange('razon_social', e.target.value)} placeholder="Nombre legal" />
+              <input className="input-field" value={form.razon_social || ''} onChange={e => handleChange('razon_social', e.target.value)} placeholder="Hotel Central" />
             </div>
           </div>
 

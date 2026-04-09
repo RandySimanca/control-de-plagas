@@ -119,12 +119,12 @@ export default function Dashboard() {
           <Link to="/admin/configuracion" className="card hover:shadow-lg transition-all border border-dark-100 group">
             <Settings className="w-8 h-8 text-primary-600 mb-3 group-hover:scale-110 transition-transform" />
             <h3 className="font-bold text-dark-900">Configuración</h3>
-            <p className="text-sm text-dark-500">Branding y ajustes del sistema</p>
+            <p className="text-sm text-dark-500">Ajustes del sistema</p>
           </Link>
           <Link to="/admin/documentos" className="card hover:shadow-lg transition-all border border-dark-100 group">
             <FilePlus className="w-8 h-8 text-primary-600 mb-3 group-hover:scale-110 transition-transform" />
             <h3 className="font-bold text-dark-900">Documentos Legales</h3>
-            <p className="text-sm text-dark-500">Cargar permisos y resoluciones</p>
+            <p className="text-sm text-dark-500">Permisos y resoluciones</p>
           </Link>
         </div>
       )}
