@@ -12,7 +12,9 @@ export default function Ordenes() {
   const [filtroEstado, setFiltroEstado] = useState('todos')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { loadOrdenes() }, [])
+  useEffect(() => { 
+    if (profile || isAdmin) loadOrdenes() 
+  }, [profile, isAdmin])
 
   async function handleDelete(e, id) {
     e.preventDefault()
@@ -46,6 +48,7 @@ export default function Ordenes() {
       setOrdenes(data || [])
     } catch (err) {
       console.error('Error:', err)
+      toast.error('Error al cargar órdenes')
     } finally {
       setLoading(false)
     }
@@ -59,8 +62,11 @@ export default function Ordenes() {
   ]
 
   const filtered = ordenes.filter(o => {
-    const matchSearch = o.clientes?.nombre?.toLowerCase().includes(search.toLowerCase()) ||
-      o.tipo_plaga?.toLowerCase().includes(search.toLowerCase())
+    const nombreCliente = o.clientes?.nombre?.toLowerCase() || ''
+    const tipoPlaga = o.tipo_plaga?.toLowerCase() || ''
+    const searchTerm = search.toLowerCase()
+
+    const matchSearch = nombreCliente.includes(searchTerm) || tipoPlaga.includes(searchTerm)
     const matchEstado = filtroEstado === 'todos' || o.estado === filtroEstado
     return matchSearch && matchEstado
   })
