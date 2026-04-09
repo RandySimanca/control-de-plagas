@@ -32,8 +32,10 @@ export default function Clientes() {
   }
 
   const filtered = clientes.filter(c => {
-    const matchSearch = c.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      c.direccion?.toLowerCase().includes(search.toLowerCase())
+    const nombre = c.nombre?.toLowerCase() || ''
+    const direccion = c.direccion?.toLowerCase() || ''
+    const searchTerm = search.toLowerCase()
+    const matchSearch = nombre.includes(searchTerm) || direccion.includes(searchTerm)
     const matchTipo = filtroTipo === 'todos' || c.tipo === filtroTipo
     return matchSearch && matchTipo
   })

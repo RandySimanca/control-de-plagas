@@ -35,10 +35,12 @@ export default function Tecnicos() {
     }
   }
 
-  const filtered = tecnicos.filter(t =>
-    t.nombre_completo?.toLowerCase().includes(search.toLowerCase()) ||
-    t.especialidad?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = tecnicos.filter(t => {
+    const nombre = t.nombre_completo?.toLowerCase() || ''
+    const especialidad = t.especialidad?.toLowerCase() || ''
+    const searchTerm = search.toLowerCase()
+    return nombre.includes(searchTerm) || especialidad.includes(searchTerm)
+  })
 
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" /></div>

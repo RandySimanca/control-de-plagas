@@ -24,7 +24,11 @@ export default function Usuarios() {
   }
 
   const filtered = usuarios.filter(u => {
-    const matchSearch = u.nombre_completo?.toLowerCase().includes(search.toLowerCase())
+    const nombre = u.nombre_completo?.toLowerCase() || ''
+    const email = u.email?.toLowerCase() || ''
+    const searchTerm = search.toLowerCase()
+
+    const matchSearch = nombre.includes(searchTerm) || email.includes(searchTerm)
     const matchRol = filtroRol === 'todos' || u.rol === filtroRol
     return matchSearch && matchRol
   })
