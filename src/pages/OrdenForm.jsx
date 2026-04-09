@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { ArrowLeft, Save, Loader2, Plus, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Plus, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function OrdenForm() {
@@ -16,7 +16,6 @@ export default function OrdenForm() {
   const [saving, setSaving] = useState(false)
   const [clientes, setClientes] = useState([])
   const [tecnicos, setTecnicos] = useState([])
-  const [fotos, setFotos] = useState([])
   const [form, setForm] = useState({
     cliente_id: searchParams.get('cliente') || '',
     tecnico_id: profile?.id || '',
@@ -93,17 +92,6 @@ export default function OrdenForm() {
         )
       }
 
-      // Upload photos
-      for (const foto of fotos) {
-        const path = `ordenes/${ordenId}/${Date.now()}_${foto.name}`
-        const { error: uploadErr } = await supabase.storage.from('fotos-servicio').upload(path, foto)
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from('fotos-servicio').getPublicUrl(path)
-          await supabase.from('fotos_servicio').insert({
-            orden_id: ordenId, storage_path: path, url: urlData.publicUrl
-          })
-        }
-      }
 
       toast.success(isEdit ? 'Orden actualizada' : 'Orden creada')
       navigate(`/ordenes/${ordenId}`)
@@ -201,15 +189,6 @@ export default function OrdenForm() {
             <textarea className="input-field" rows={3} value={form.observaciones || ''} onChange={e => handleChange('observaciones', e.target.value)} placeholder="Notas del servicio..." />
           </div>
 
-          {/* Photos */}
-          <div>
-            <label className="label-field">Fotos</label>
-            <label className="flex items-center justify-center gap-2 p-6 border-2 border-dashed border-dark-300 rounded-xl cursor-pointer hover:border-primary-500 hover:bg-primary-50/50 transition-colors">
-              <Upload className="w-5 h-5 text-dark-400" />
-              <span className="text-sm text-dark-500">{fotos.length > 0 ? `${fotos.length} archivo(s) seleccionado(s)` : 'Haz clic para subir fotos'}</span>
-              <input type="file" multiple accept="image/*" className="hidden" onChange={e => setFotos(Array.from(e.target.files))} />
-            </label>
-          </div>
 
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={saving} className="btn-primary flex-1">
