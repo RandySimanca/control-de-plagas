@@ -49,8 +49,12 @@ export default function UsuarioForm() {
     try {
       if (isEdit) {
         const { error } = await supabase.from('profiles').update({
-          nombre_completo: form.nombre_completo, telefono: form.telefono,
-          rol: form.rol, especialidad: form.especialidad, activo: form.activo,
+          nombre_completo: form.nombre_completo, 
+          email: form.email,
+          telefono: form.telefono,
+          rol: form.rol, 
+          especialidad: form.especialidad, 
+          activo: form.activo,
           cliente_id: form.rol === 'cliente' ? form.cliente_id || null : null,
           updated_at: new Date().toISOString()
         }).eq('id', id)
