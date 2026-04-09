@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { generarCertificado } from '../../lib/generarCertificado'
+import { generarCertificado, abrirCertificado } from '../../lib/generarCertificado'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   Bug, LogOut, ClipboardList, FileCheck, Calendar, Download,
@@ -47,6 +47,29 @@ export default function PortalHistorial() {
     }
   }
 
+  async function descargarDoc(doc) {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documentos')
+        .download(doc.storage_path)
+
+      if (error) throw error
+
+      const url = window.URL.createObjectURL(data)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      const safeName = doc.nombre.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+      a.download = `${safeName}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (err) {
+      toast.error('Error al descargar documento')
+    }
+  }
+
   async function handleLogout() {
     await logout()
     navigate('/portal/login')
@@ -56,16 +79,18 @@ export default function PortalHistorial() {
   async function descargarCert(cert) {
     const orden = cert.ordenes_servicio
     const { data: config } = await supabase.from('configuracion').select('*').single()
-    const pdfBlob = await generarCertificado({
+    const [actividadesRes, fotosRes] = await Promise.all([
+      supabase.from('actividades_servicio').select('*').eq('orden_id', orden.id).order('created_at', { ascending: false }),
+      supabase.from('fotos_servicio').select('*').eq('orden_id', orden.id)
+    ])
+    await abrirCertificado({
       folio: cert.folio, cliente: orden.clientes, orden,
       productos: orden.productos_usados || [], tecnico: orden.profiles?.nombre_completo || 'N/A',
       config,
-      firma: cert.firma_url
+      firma: cert.firma_url,
+      actividades: actividadesRes.data || [],
+      fotos: fotosRes.data || []
     })
-    const url = URL.createObjectURL(pdfBlob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `Certificado_${cert.folio}.pdf`; a.click()
-    URL.revokeObjectURL(url)
   }
 
   const estadoConfig = {
@@ -201,7 +226,11 @@ export default function PortalHistorial() {
           ) : (
             <div className="space-y-3">
               {documentos.map(doc => (
-                <a key={doc.id} href={doc.url} target="_blank" rel="noopener" className="card flex items-center justify-between hover:bg-dark-50 transition-colors group">
+                <div 
+                  key={doc.id} 
+                  onClick={() => descargarDoc(doc)}
+                  className="card flex items-center justify-between hover:bg-dark-50 transition-colors group cursor-pointer"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
                       <FileText className="w-5 h-5" />
@@ -212,7 +241,7 @@ export default function PortalHistorial() {
                     </div>
                   </div>
                   <Download className="w-5 h-5 text-dark-300 group-hover:text-primary-600" />
-                </a>
+                </div>
               ))}
             </div>
           )

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { generarCertificado } from '../lib/generarCertificado'
+import { generarCertificado, abrirCertificado } from '../lib/generarCertificado'
 import { FileCheck, Download, Search, Calendar } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import toast from 'react-hot-toast'
 
 export default function Certificados() {
+  const { isAdmin, profile } = useAuth()
   const [certificados, setCertificados] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -18,7 +21,7 @@ export default function Certificados() {
           *,
           ordenes_servicio(
             *, clientes(nombre, direccion, telefono, email, tipo),
-            profiles(nombre_completo),
+            profiles!tecnico_id(nombre_completo),
             productos_usados:productos_usados(*)
           )
         `)
@@ -39,23 +42,31 @@ export default function Certificados() {
   }
 
   async function descargar(cert) {
-    const orden = cert.ordenes_servicio
-    const { data: config } = await supabase.from('configuracion').select('*').single()
-    const pdfBlob = await generarCertificado({
-      folio: cert.folio,
-      cliente: orden.clientes,
-      orden,
-      productos: orden.productos_usados || [],
-      tecnico: orden.profiles?.nombre_completo || 'N/A',
-      config,
-      firma: cert.firma_url
-    })
-    const url = URL.createObjectURL(pdfBlob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Certificado_${cert.folio}.pdf`
-    a.click()
-    URL.revokeObjectURL(url)
+    try {
+      const orden = cert.ordenes_servicio
+      const { data: config } = await supabase.from('configuracion').select('*').single()
+      
+      // Load all data needed for a complete certificate (same as client/tech)
+      const [actividadesRes, fotosRes] = await Promise.all([
+        supabase.from('actividades_servicio').select('*').eq('orden_id', orden.id).order('created_at', { ascending: false }),
+        supabase.from('fotos_servicio').select('*').eq('orden_id', orden.id)
+      ])
+      
+      await abrirCertificado({
+        folio: cert.folio,
+        cliente: orden.clientes,
+        orden,
+        productos: orden.productos_usados || [],
+        tecnico: orden.profiles?.nombre_completo || 'N/A',
+        config,
+        firma: cert.firma_url,
+        actividades: actividadesRes.data || [],
+        fotos: fotosRes.data || []
+      })
+    } catch (err) {
+      console.error('Error generando certificado:', err)
+      toast.error('Error al generar el PDF: ' + err.message)
+    }
   }
 
   const filtered = certificados.filter(c =>

@@ -69,6 +69,29 @@ export default function DocumentosLegales() {
     }
   }
 
+  async function descargarDoc(doc) {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documentos')
+        .download(doc.storage_path)
+
+      if (error) throw error
+
+      const url = window.URL.createObjectURL(data)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      const safeName = doc.nombre.replace(/[^a-z0-0]/gi, '_').toLowerCase()
+      a.download = `${safeName}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (err) {
+      toast.error('Error al descargar documento')
+    }
+  }
+
   async function handleDelete(doc) {
     if (!confirm('¿Estás seguro de eliminar este documento?')) return
 
@@ -157,15 +180,13 @@ export default function DocumentosLegales() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a 
-                      href={doc.url} 
-                      target="_blank" 
-                      rel="noopener" 
+                    <button 
+                      onClick={() => descargarDoc(doc)}
                       className="p-2 text-dark-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      title="Ver Documento"
+                      title="Descargar Documento"
                     >
                       <ExternalLink className="w-5 h-5" />
-                    </a>
+                    </button>
                     <button 
                       onClick={() => handleDelete(doc)} 
                       className="p-2 text-dark-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

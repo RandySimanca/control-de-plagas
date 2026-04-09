@@ -31,7 +31,7 @@ export default function UsuarioForm() {
     try {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single()
       if (error) throw error
-      setForm({ ...data, email: '', password: '' })
+      setForm({ ...data, password: '' })
     } catch {
       toast.error('Error cargando usuario')
       navigate('/admin/usuarios')
@@ -125,18 +125,25 @@ export default function UsuarioForm() {
             <input className="input-field" value={form.nombre_completo} onChange={e => handleChange('nombre_completo', e.target.value)} placeholder="Nombre del usuario" />
           </div>
 
-          {!isEdit && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className={`grid grid-cols-1 ${!isEdit ? 'sm:grid-cols-2' : ''} gap-5`}>
               <div>
                 <label className="label-field">Email *</label>
-                <input className="input-field" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} placeholder="correo@ejemplo.com" />
+                <input 
+                  className={`input-field ${isEdit ? 'bg-dark-50 opacity-70 cursor-not-allowed' : ''}`} 
+                  type="email" 
+                  value={form.email} 
+                  onChange={e => handleChange('email', e.target.value)} 
+                  placeholder="correo@ejemplo.com"
+                  readOnly={isEdit}
+                />
               </div>
-              <div>
-                <label className="label-field">Contraseña *</label>
-                <input className="input-field" type="password" value={form.password} onChange={e => handleChange('password', e.target.value)} placeholder="Mínimo 6 caracteres" />
-              </div>
+              {!isEdit && (
+                <div>
+                  <label className="label-field">Contraseña *</label>
+                  <input className="input-field" type="password" value={form.password} onChange={e => handleChange('password', e.target.value)} placeholder="Mínimo 6 caracteres" />
+                </div>
+              )}
             </div>
-          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>

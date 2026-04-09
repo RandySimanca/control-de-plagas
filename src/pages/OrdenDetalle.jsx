@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { generarCertificado } from '../lib/generarCertificado'
+import { generarCertificado, abrirCertificado } from '../lib/generarCertificado'
 import {
   ArrowLeft, Edit, Calendar, User, MapPin, Package,
   FileText, Camera, CheckCircle2, Clock, Play, Loader2, PenLine,
@@ -69,11 +69,22 @@ export default function OrdenDetalle() {
   async function cambiarEstado(nuevoEstado) {
     try {
       const updates = { estado: nuevoEstado, updated_at: new Date().toISOString() }
-      if (nuevoEstado === 'completada') updates.fecha_completada = new Date().toISOString().split('T')[0]
+      if (nuevoEstado === 'completada') {
+        updates.fecha_completada = new Date().toISOString().split('T')[0]
+        // Auto-create certificate record if it doesn't exist
+        if (!certificado) {
+          const folio = `PC-${Date.now().toString(36).toUpperCase()}`
+          await supabase.from('certificados').insert({ orden_id: id, folio })
+          setCertificado({ folio })
+        }
+      }
       await supabase.from('ordenes_servicio').update(updates).eq('id', id)
       setOrden(prev => ({ ...prev, ...updates }))
       toast.success(`Estado cambiado a ${nuevoEstado.replace('_', ' ')}`)
-    } catch { toast.error('Error al cambiar estado') }
+    } catch (err) { 
+      console.error(err)
+      toast.error('Error al cambiar estado') 
+    }
   }
 
   async function handleSaveSignature(blob) {
@@ -89,11 +100,11 @@ export default function OrdenDetalle() {
       // Ensure certificate exists or will be created
       if (!certificado) {
         const folio = `PC-${Date.now().toString(36).toUpperCase()}`
-        await supabase.from('certificados').insert({ 
+        await supabase.from('certificados').upsert({ 
           orden_id: id, 
           folio, 
           firma_url: firmaUrl 
-        })
+        }, { onConflict: 'orden_id' })
         setCertificado({ folio, firma_url: firmaUrl })
       } else {
         await supabase.from('certificados').update({ 
@@ -118,7 +129,15 @@ export default function OrdenDetalle() {
       const folio = `PC-${Date.now().toString(36).toUpperCase()}`
       const { data: config } = await supabase.from('configuracion').select('*').single()
       
-      const pdfBlob = await generarCertificado({
+      // Save cert record
+      if (!certificado) {
+        await supabase.from('certificados').insert({ orden_id: id, folio })
+      } else {
+        // Just update folio if needed, but usually it exists
+        await supabase.from('certificados').update({ folio }).eq('orden_id', id)
+      }
+
+      await abrirCertificado({
         folio,
         cliente: orden.clientes,
         orden,
@@ -130,18 +149,7 @@ export default function OrdenDetalle() {
         fotos
       })
 
-      // Save cert record
-      await supabase.from('certificados').insert({ orden_id: id, folio })
-
-      // Download
-      const url = URL.createObjectURL(pdfBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `Certificado_${folio}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
-
-      setCertificado({ folio })
+      setCertificado(prev => ({ ...prev, folio }))
       toast.success('Certificado generado')
     } catch (err) {
       toast.error('Error generando certificado: ' + err.message)
@@ -152,23 +160,17 @@ export default function OrdenDetalle() {
 
   async function descargarCertificado() {
     const { data: config } = await supabase.from('configuracion').select('*').single()
-    const pdfBlob = await generarCertificado({
-      folio: certificado.folio,
-      cliente: orden.clientes,
-      orden,
-      productos,
-      tecnico: orden.profiles?.nombre_completo || 'N/A',
-      config,
-      firma: certificado.firma_url,
-      actividades,
-      fotos
-    })
-    const url = URL.createObjectURL(pdfBlob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Certificado_${certificado.folio}.pdf`
-    a.click()
-    URL.revokeObjectURL(url)
+      await abrirCertificado({
+        folio: certificado.folio,
+        cliente: orden.clientes,
+        orden,
+        productos,
+        tecnico: orden.profiles?.nombre_completo || 'N/A',
+        config,
+        firma: certificado?.firma_url,
+        actividades,
+        fotos
+      })
   }
   async function handleSaveActivity(e) {
     e.preventDefault()

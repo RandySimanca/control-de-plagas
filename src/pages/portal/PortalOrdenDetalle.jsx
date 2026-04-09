@@ -7,7 +7,7 @@ import {
   FileText, Camera, Clock, History, MessageSquare, Download, CheckCircle2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { generarCertificado } from '../../lib/generarCertificado'
+import { generarCertificado, abrirCertificado } from '../../lib/generarCertificado'
 
 export default function PortalOrdenDetalle() {
   const { id } = useParams()
@@ -25,10 +25,10 @@ export default function PortalOrdenDetalle() {
   async function load() {
     try {
       const [ordenRes, prodsRes, fotosRes, certRes, actividadesRes] = await Promise.all([
-        supabase.from('ordenes_servicio').select(`*, clientes(*), profiles(nombre_completo)`).eq('id', id).single(),
+        supabase.from('ordenes_servicio').select(`*, clientes(*), profiles!tecnico_id(nombre_completo)`).eq('id', id).single(),
         supabase.from('productos_usados').select('*').eq('orden_id', id),
         supabase.from('fotos_servicio').select('*').eq('orden_id', id),
-        supabase.from('certificados').select('*').eq('orden_id', id).maybeSingle(),
+        supabase.from('certificados').select('*').eq('orden_id', id).order('created_at', { ascending: false }),
         supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: false })
       ])
       
@@ -36,7 +36,11 @@ export default function PortalOrdenDetalle() {
       setOrden(ordenRes.data)
       setProductos(prodsRes.data || [])
       setFotos(fotosRes.data || [])
-      setCertificado(certRes.data)
+      
+      // Tomar el primer certificado (el más reciente)
+      const certData = certRes.data && certRes.data.length > 0 ? certRes.data[0] : null
+      setCertificado(certData)
+      
       setActividades(actividadesRes.data || [])
     } catch (err) {
       toast.error('No se pudo cargar el detalle de la orden')
@@ -50,7 +54,7 @@ export default function PortalOrdenDetalle() {
     setDescargando(true)
     try {
       const { data: config } = await supabase.from('configuracion').select('*').single()
-      const pdfBlob = await generarCertificado({
+      await abrirCertificado({
         folio: certificado.folio,
         cliente: orden.clientes,
         orden,
@@ -61,12 +65,6 @@ export default function PortalOrdenDetalle() {
         actividades,
         fotos
       })
-      const url = URL.createObjectURL(pdfBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `Certificado_${certificado.folio}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
     } catch (err) {
       toast.error('Error al descargar: ' + err.message)
     } finally {

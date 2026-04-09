@@ -6,6 +6,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   nombre_completo TEXT NOT NULL,
+  email TEXT,
   telefono TEXT,
   rol TEXT NOT NULL DEFAULT 'tecnico' CHECK (rol IN ('admin', 'tecnico', 'cliente')),
   especialidad TEXT,
@@ -69,7 +70,8 @@ CREATE TABLE IF NOT EXISTS public.certificados (
   folio TEXT NOT NULL UNIQUE,
   pdf_path TEXT,
   firma_url TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT unique_orden_certificado UNIQUE(orden_id)
 );
 
 -- 7. Tabla de actividades (bitácora)
@@ -199,21 +201,27 @@ BEGIN
 END $$;
 
 -- Crear nuevas políticas seguras
+-- Perfiles: Todos los autenticados pueden ver nombres y roles
 CREATE POLICY "Admin acceso total a profiles" ON public.profiles FOR ALL USING (public.es_admin());
-CREATE POLICY "Usuarios ven su propio perfil" ON public.profiles FOR SELECT USING (id = auth.uid());
+CREATE POLICY "Lectura perfiles autenticados" ON public.profiles FOR SELECT USING (auth.role() = 'authenticated');
 
+-- Clientes: Acceso total para admin, lectura para técnicos y el propio cliente
 CREATE POLICY "Admin acceso total a clientes" ON public.clientes FOR ALL USING (public.es_admin());
 CREATE POLICY "Tecnicos leen clientes" ON public.clientes FOR SELECT USING (public.es_tecnico());
-CREATE POLICY "Clientes ven su propio registro" ON public.clientes FOR SELECT USING (id = public.get_my_cliente_id());
+CREATE POLICY "Clientes ven su propio registro" ON public.clientes FOR SELECT USING (id = (SELECT cliente_id FROM public.profiles WHERE id = auth.uid()));
 
+-- Órdenes: Admin total, técnicos leen, clientes ven sus propias órdenes
 CREATE POLICY "Admin acceso total a ordenes" ON public.ordenes_servicio FOR ALL USING (public.es_admin());
 CREATE POLICY "Tecnicos ven todas las ordenes" ON public.ordenes_servicio FOR SELECT USING (public.es_tecnico());
-CREATE POLICY "Clientes ven sus propias ordenes" ON public.ordenes_servicio FOR SELECT USING (cliente_id = public.get_my_cliente_id());
+CREATE POLICY "Clientes ven sus propias ordenes" ON public.ordenes_servicio FOR SELECT USING (cliente_id = (SELECT cliente_id FROM public.profiles WHERE id = auth.uid()));
 
+-- Certificados: Permitir lectura a quien tenga acceso a la orden
 CREATE POLICY "Admin acceso total a certificados" ON public.certificados FOR ALL USING (public.es_admin());
-CREATE POLICY "Todos leen certificados" ON public.certificados FOR SELECT USING (public.es_tecnico() OR public.es_admin());
-CREATE POLICY "Clientes ven sus certificados" ON public.certificados FOR SELECT USING (
-  orden_id IN (SELECT id FROM public.ordenes_servicio WHERE cliente_id = public.get_my_cliente_id())
+CREATE POLICY "Lectura certificados autorizada" ON public.certificados FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM public.ordenes_servicio 
+    WHERE id = public.certificados.orden_id 
+  )
 );
 
 CREATE POLICY "Admin acceso total a actividades" ON public.actividades_servicio FOR ALL USING (public.es_admin());
@@ -290,11 +298,12 @@ CREATE POLICY "Admin borra documentos" ON storage.objects FOR DELETE USING (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, nombre_completo, rol)
+  INSERT INTO public.profiles (id, nombre_completo, rol, email)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'nombre_completo', NEW.email),
-    COALESCE(NEW.raw_user_meta_data->>'rol', 'tecnico')
+    COALESCE(NEW.raw_user_meta_data->>'rol', 'tecnico'),
+    NEW.email
   );
   RETURN NEW;
 END;

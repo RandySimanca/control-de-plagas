@@ -2,16 +2,33 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Plus, Search, Calendar, User, ChevronRight } from 'lucide-react'
+import { Plus, Search, Calendar, User, ChevronRight, Trash2, ClipboardList } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function Ordenes() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, profile } = useAuth()
   const [ordenes, setOrdenes] = useState([])
   const [search, setSearch] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('todos')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { loadOrdenes() }, [])
+
+  async function handleDelete(e, id) {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!confirm('¿Estás seguro de eliminar esta orden? Se borrarán todos los datos asociados.')) return
+    
+    try {
+      const { error } = await supabase.from('ordenes_servicio').delete().eq('id', id)
+      if (error) throw error
+      setOrdenes(ordenes.filter(o => o.id !== id))
+      toast.success('Orden eliminada')
+    } catch (err) {
+      toast.error('Error al eliminar')
+    }
+  }
 
   async function loadOrdenes() {
     try {
@@ -130,7 +147,17 @@ export default function Ordenes() {
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className={estadoBadge[orden.estado]}>{estadoLabel[orden.estado]}</span>
-                <ChevronRight className="w-5 h-5 text-dark-300 group-hover:text-primary-600 transition-colors" />
+                <div className="flex items-center gap-1">
+                  {isAdmin && (
+                    <button 
+                      onClick={(e) => handleDelete(e, orden.id)}
+                      className="p-2 text-dark-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  <ChevronRight className="w-5 h-5 text-dark-300 group-hover:text-primary-600 transition-colors" />
+                </div>
               </div>
             </Link>
           ))}

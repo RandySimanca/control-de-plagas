@@ -134,6 +134,16 @@ export async function generarCertificado({ folio, cliente, orden, productos, tec
     doc.setPage(i); doc.setFontSize(8); doc.setTextColor(148, 163, 184)
     doc.text(`Página ${i} de ${totalPages} | Folio: ${folio}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
   }
+  
+  return doc
+}
 
-  return doc.output('blob')
+/**
+ * Generates and opens the certificate PDF in a new browser tab.
+ * This is the most reliable approach across all browsers.
+ */
+export async function abrirCertificado(params) {
+  const doc = await generarCertificado(params)
+  const blobUrl = doc.output('bloburl')
+  window.open(blobUrl, '_blank')
 }
