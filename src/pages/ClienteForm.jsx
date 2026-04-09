@@ -111,7 +111,7 @@ export default function ClienteForm() {
             </div>
             <div>
               <label className="label-field">Razón Social</label>
-              <input className="input-field" value={form.razon_social || ''} onChange={e => handleChange('razon_social', e.target.value)} placeholder="Hotel Centralito" />
+              <input className="input-field" value={form.razon_social || ''} onChange={e => handleChange('razon_social', e.target.value)} placeholder="Hotel Central" />
             </div>
           </div>
 
