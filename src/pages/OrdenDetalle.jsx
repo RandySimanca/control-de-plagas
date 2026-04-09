@@ -231,7 +231,8 @@ export default function OrdenDetalle() {
 
   if (!orden) return null
 
-  const canEdit = isAdmin || orden.tecnico_id === profile?.id
+  const isAssignedTecnico = orden.tecnico_id === profile?.id
+  const canManage = isAdmin
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -247,7 +248,7 @@ export default function OrdenDetalle() {
               <h1 className="text-xl font-bold text-dark-900">{orden.clientes?.nombre}</h1>
               <div className="flex items-center gap-2">
                 <span className={estadoBadge[orden.estado]}>{estadoLabel[orden.estado]}</span>
-                {isAdmin && (
+                {canManage && (
                   <button 
                     onClick={handleDeleteOrden}
                     className="p-1.5 text-dark-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
@@ -261,17 +262,17 @@ export default function OrdenDetalle() {
             <p className="text-sm text-dark-400">Orden creada el {new Date(orden.created_at).toLocaleDateString('es')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {canEdit && orden.estado === 'programada' && (
+            {isAssignedTecnico && orden.estado === 'programada' && (
               <button onClick={() => cambiarEstado('en_progreso')} className="btn-secondary text-sm">
                 <Play className="w-4 h-4" /> Iniciar
               </button>
             )}
-            {canEdit && orden.estado === 'en_progreso' && (
+            {isAssignedTecnico && orden.estado === 'en_progreso' && (
               <button onClick={() => setShowSignature(true)} className="btn-primary text-sm">
                 <CheckCircle2 className="w-4 h-4" /> Completar y Firmar
               </button>
             )}
-            {canEdit && (
+            {canManage && (
               <Link to={`/ordenes/${id}/editar`} className="btn-secondary text-sm">
                 <Edit className="w-4 h-4" /> Editar
               </Link>
@@ -334,7 +335,7 @@ export default function OrdenDetalle() {
           <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2">
             <History className="w-5 h-5 text-primary-600" /> Bitácora de Actividad
           </h2>
-          {canEdit && orden.estado === 'en_progreso' && (
+          {isAssignedTecnico && orden.estado === 'en_progreso' && (
             <button onClick={() => setShowActivityModal(true)} className="btn-secondary text-sm py-1.5">
               <Plus className="w-4 h-4" /> Registrar Avance
             </button>
