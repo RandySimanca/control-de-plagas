@@ -56,11 +56,19 @@ export async function generarCertificado({ folio, cliente, orden, productos, tec
   doc.setFontSize(13); doc.setTextColor(30, 41, 59); doc.text('Datos del Cliente', margin, y)
   y += 10
   doc.setFontSize(10); doc.setTextColor(71, 85, 105)
-  const clienteInfo = [['Nombre:', cliente?.nombre || 'N/A'], ['Dirección:', cliente?.direccion || 'N/A'], ['Teléfono:', cliente?.telefono || 'N/A']]
+  
+  const clienteInfo = [
+    ['Nombre:', cliente?.nombre || 'N/A'],
+    ['Razón Social:', cliente?.razon_social || 'N/A'],
+    ['ID / NIT:', cliente?.identificacion || 'N/A'],
+    ['Dirección:', cliente?.direccion || 'N/A'],
+    ['Teléfono:', cliente?.telefono || 'N/A']
+  ]
+  
   clienteInfo.forEach(([label, value]) => {
-    doc.setFont(undefined, 'bold'); doc.text(label, margin, y)
-    doc.setFont(undefined, 'normal'); doc.text(value, margin + 35, y)
-    y += 7
+    doc.setFont('', 'bold'); doc.text(label, margin, y)
+    doc.setFont('', 'normal'); doc.text(value, margin + 25, y)
+    y += 6
   })
 
   y += 5

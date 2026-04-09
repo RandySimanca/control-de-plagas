@@ -11,7 +11,16 @@ export default function ClienteForm() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    nombre: '', direccion: '', telefono: '', email: '', tipo: 'residencial', notas: ''
+    nombre: '', 
+    razon_social: '',
+    identificacion: '',
+    direccion: '', 
+    telefono: '', 
+    email: '', 
+    nombre_contacto: '',
+    telefono_contacto: '',
+    tipo: 'residencial', 
+    notas: ''
   })
 
   useEffect(() => {
@@ -39,15 +48,32 @@ export default function ClienteForm() {
     try {
       if (isEdit) {
         const { error } = await supabase.from('clientes').update({
-          nombre: form.nombre, direccion: form.direccion, telefono: form.telefono,
-          email: form.email, tipo: form.tipo, notas: form.notas, updated_at: new Date().toISOString()
+          nombre: form.nombre,
+          razon_social: form.razon_social,
+          identificacion: form.identificacion,
+          direccion: form.direccion,
+          telefono: form.telefono,
+          email: form.email,
+          nombre_contacto: form.nombre_contacto,
+          telefono_contacto: form.telefono_contacto,
+          tipo: form.tipo,
+          notas: form.notas,
+          updated_at: new Date().toISOString()
         }).eq('id', id)
         if (error) throw error
         toast.success('Cliente actualizado')
       } else {
         const { error } = await supabase.from('clientes').insert({
-          nombre: form.nombre, direccion: form.direccion, telefono: form.telefono,
-          email: form.email, tipo: form.tipo, notas: form.notas
+          nombre: form.nombre,
+          razon_social: form.razon_social,
+          identificacion: form.identificacion,
+          direccion: form.direccion,
+          telefono: form.telefono,
+          email: form.email,
+          nombre_contacto: form.nombre_contacto,
+          telefono_contacto: form.telefono_contacto,
+          tipo: form.tipo,
+          notas: form.notas
         })
         if (error) throw error
         toast.success('Cliente creado')
@@ -77,37 +103,66 @@ export default function ClienteForm() {
         <h1 className="text-xl font-bold text-dark-900 mb-6">
           {isEdit ? 'Editar Cliente' : 'Nuevo Cliente'}
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="label-field">Nombre *</label>
-            <input className="input-field" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} placeholder="Nombre del cliente" />
-          </div>
-          <div>
-            <label className="label-field">Dirección</label>
-            <input className="input-field" value={form.direccion || ''} onChange={e => handleChange('direccion', e.target.value)} placeholder="Dirección completa" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="label-field">Teléfono</label>
-              <input className="input-field" value={form.telefono || ''} onChange={e => handleChange('telefono', e.target.value)} placeholder="Número de teléfono" />
+              <label className="label-field">Nombre / Empresa *</label>
+              <input className="input-field" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} placeholder="Ej: Juan Pérez o Hotel Central" />
             </div>
             <div>
-              <label className="label-field">Email</label>
+              <label className="label-field">Razón Social</label>
+              <input className="input-field" value={form.razon_social || ''} onChange={e => handleChange('razon_social', e.target.value)} placeholder="Nombre legal" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label-field">Identificación / NIT</label>
+              <input className="input-field" value={form.identificacion || ''} onChange={e => handleChange('identificacion', e.target.value)} placeholder="Cédula o NIT" />
+            </div>
+            <div>
+              <label className="label-field">Dirección</label>
+              <input className="input-field" value={form.direccion || ''} onChange={e => handleChange('direccion', e.target.value)} placeholder="Dirección completa" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label-field">Teléfono Principal</label>
+              <input className="input-field" value={form.telefono || ''} onChange={e => handleChange('telefono', e.target.value)} placeholder="Número de contacto" />
+            </div>
+            <div>
+              <label className="label-field">Correo Electrónico</label>
               <input className="input-field" type="email" value={form.email || ''} onChange={e => handleChange('email', e.target.value)} placeholder="correo@ejemplo.com" />
             </div>
           </div>
+
+          <div className="bg-dark-50 p-4 rounded-xl border border-dark-100 mt-2">
+            <h3 className="text-xs font-bold text-dark-500 uppercase tracking-wider mb-4">Contacto en Sitio</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="label-field !text-dark-600">Nombre de Contacto</label>
+                <input className="input-field bg-white" value={form.nombre_contacto || ''} onChange={e => handleChange('nombre_contacto', e.target.value)} placeholder="Persona que recibe el servicio" />
+              </div>
+              <div>
+                <label className="label-field !text-dark-600">Teléfono de Contacto</label>
+                <input className="input-field bg-white" value={form.telefono_contacto || ''} onChange={e => handleChange('telefono_contacto', e.target.value)} placeholder="Teléfono del contacto" />
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="label-field">Tipo de cliente</label>
-            <div className="flex gap-3">
-              {['residencial', 'industrial'].map(tipo => (
+            <div className="flex gap-2">
+              {['residencial', 'comercial', 'industrial'].map(tipo => (
                 <button
                   key={tipo}
                   type="button"
                   onClick={() => handleChange('tipo', tipo)}
-                  className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
                     form.tipo === tipo
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-dark-200 text-dark-500 hover:border-dark-300'
+                      : 'border-dark-100 text-dark-400 hover:border-dark-200'
                   }`}
                 >
                   {tipo.charAt(0).toUpperCase() + tipo.slice(1)}

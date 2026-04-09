@@ -64,17 +64,26 @@ export default function ClienteDetalle() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-              cliente.tipo === 'industrial' ? 'bg-orange-100' : 'bg-purple-100'
+              cliente.tipo === 'industrial' ? 'bg-orange-100' : 
+              cliente.tipo === 'comercial' ? 'bg-blue-100' : 'bg-purple-100'
             }`}>
-              {cliente.tipo === 'industrial'
+              {cliente.tipo === 'industrial' || cliente.tipo === 'comercial'
                 ? <Building2 className="w-7 h-7 text-orange-600" />
                 : <Home className="w-7 h-7 text-purple-600" />}
             </div>
             <div>
               <h1 className="text-xl font-bold text-dark-900">{cliente.nombre}</h1>
-              <span className={cliente.tipo === 'industrial' ? 'badge-industrial' : 'badge-residencial'}>
-                {cliente.tipo}
-              </span>
+              <div className="flex gap-2 items-center mt-1">
+                <span className={
+                  cliente.tipo === 'industrial' ? 'badge-industrial' : 
+                  cliente.tipo === 'comercial' ? 'badge-blue' : 'badge-residencial'
+                }>
+                  {cliente.tipo}
+                </span>
+                {cliente.identificacion && (
+                  <span className="text-xs font-mono text-dark-400">ID: {cliente.identificacion}</span>
+                )}
+              </div>
             </div>
           </div>
           {isAdmin && (
@@ -88,25 +97,55 @@ export default function ClienteDetalle() {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {cliente.direccion && (
-            <div className="flex items-center gap-2 text-sm text-dark-600">
-              <MapPin className="w-4 h-4 text-dark-400 shrink-0" /> {cliente.direccion}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xs font-bold text-dark-400 uppercase tracking-wider mb-3">Datos Generales</h3>
+            <div className="space-y-3">
+              {cliente.razon_social && (
+                <div className="text-sm font-medium text-dark-800">
+                  <span className="text-dark-400 font-normal">Razón Social:</span> {cliente.razon_social}
+                </div>
+              )}
+              {cliente.direccion && (
+                <div className="flex items-start gap-2 text-sm text-dark-600">
+                  <MapPin className="w-4 h-4 text-dark-400 shrink-0 mt-0.5" /> {cliente.direccion}
+                </div>
+              )}
+              {cliente.telefono && (
+                <div className="flex items-center gap-2 text-sm text-dark-600">
+                  <Phone className="w-4 h-4 text-dark-400 shrink-0" /> {cliente.telefono}
+                </div>
+              )}
+              {cliente.email && (
+                <div className="flex items-center gap-2 text-sm text-dark-600">
+                  <Mail className="w-4 h-4 text-dark-400 shrink-0" /> {cliente.email}
+                </div>
+              )}
             </div>
-          )}
-          {cliente.telefono && (
-            <div className="flex items-center gap-2 text-sm text-dark-600">
-              <Phone className="w-4 h-4 text-dark-400 shrink-0" /> {cliente.telefono}
+          </div>
+
+          <div className="bg-dark-50 p-4 rounded-xl border border-dark-100">
+            <h3 className="text-xs font-bold text-dark-400 uppercase tracking-wider mb-3">Contacto en Sitio</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-dark-100">
+                  <Phone className="w-4 h-4 text-primary-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-dark-900">{cliente.nombre_contacto || 'No especificado'}</p>
+                  <p className="text-xs text-dark-500">{cliente.telefono_contacto || 'Sin teléfono de contacto'}</p>
+                </div>
+              </div>
             </div>
-          )}
-          {cliente.email && (
-            <div className="flex items-center gap-2 text-sm text-dark-600">
-              <Mail className="w-4 h-4 text-dark-400 shrink-0" /> {cliente.email}
-            </div>
-          )}
+          </div>
         </div>
+
         {cliente.notas && (
-          <p className="mt-4 text-sm text-dark-500 bg-dark-50 p-3 rounded-xl">{cliente.notas}</p>
+          <div className="mt-6 pt-6 border-t border-dark-100">
+            <h3 className="text-xs font-bold text-dark-400 uppercase tracking-wider mb-2">Notas</h3>
+            <p className="text-sm text-dark-600 leading-relaxed">{cliente.notas}</p>
+          </div>
         )}
       </div>
 
