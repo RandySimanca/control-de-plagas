@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
-import { ArrowLeft, Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function UsuarioForm() {
@@ -14,8 +14,10 @@ export default function UsuarioForm() {
   const [clientes, setClientes] = useState([])
   const [form, setForm] = useState({
     nombre_completo: '', email: '', password: '', telefono: '',
-    rol: 'tecnico', especialidad: '', activo: true, cliente_id: ''
+    rol: 'tecnico', especialidad: '', activo: true, cliente_id: '',
+    firma_url: ''
   })
+  const [signatureFile, setSignatureFile] = useState(null)
 
   useEffect(() => {
     loadClientes()
@@ -48,12 +50,23 @@ export default function UsuarioForm() {
 
     try {
       if (isEdit) {
+        let firmaUrl = form.firma_url
+        if (signatureFile) {
+          const path = `perfiles/firma_${id}_${Date.now()}`
+          const { error: upErr } = await supabase.storage.from('documentos').upload(path, signatureFile)
+          if (!upErr) {
+            const { data: urlData } = supabase.storage.from('documentos').getPublicUrl(path)
+            firmaUrl = urlData.publicUrl
+          }
+        }
+
         const { error } = await supabase.from('profiles').update({
           nombre_completo: form.nombre_completo, 
           email: form.email,
           telefono: form.telefono,
           rol: form.rol, 
           especialidad: form.especialidad, 
+          firma_url: firmaUrl,
           activo: form.activo,
           cliente_id: form.rol === 'cliente' ? form.cliente_id || null : null,
           updated_at: new Date().toISOString()
@@ -173,9 +186,26 @@ export default function UsuarioForm() {
           </div>
 
           {form.rol === 'tecnico' && (
-            <div>
-              <label className="label-field">Especialidad</label>
-              <input className="input-field" value={form.especialidad || ''} onChange={e => handleChange('especialidad', e.target.value)} placeholder="Ej: Desratización, Fumigación general..." />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="label-field">Especialidad</label>
+                <input className="input-field" value={form.especialidad || ''} onChange={e => handleChange('especialidad', e.target.value)} placeholder="Ej: Fumigación..." />
+              </div>
+              <div>
+                <label className="label-field">Firma Digital (Técnico)</label>
+                <div className="flex items-center gap-3">
+                  {form.firma_url && !signatureFile && (
+                    <img src={form.firma_url} alt="Firma" className="w-12 h-12 rounded border bg-white object-contain" />
+                  )}
+                  <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-dark-200 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-all">
+                    <Upload className="w-4 h-4 text-dark-400" />
+                    <span className="text-xs text-dark-500 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {signatureFile ? signatureFile.name : 'Subir firma JPG/PNG'}
+                    </span>
+                    <input type="file" accept="image/*" className="hidden" onChange={e => setSignatureFile(e.target.files[0])} />
+                  </label>
+                </div>
+              </div>
             </div>
           )}
 

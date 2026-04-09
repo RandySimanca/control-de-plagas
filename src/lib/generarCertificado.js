@@ -16,7 +16,7 @@ async function getImgData(url) {
   }
 }
 
-export async function generarCertificado({ folio, cliente, orden, productos, tecnico, config, firma, actividades = [], fotos = [] }) {
+export async function generarCertificado({ folio, cliente, orden, productos, tecnico, config, firma, actividades = [], fotos = [], firma_tecnico }) {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -112,12 +112,29 @@ export async function generarCertificado({ folio, cliente, orden, productos, tec
     y += 10
   }
 
-  // Signature
+  // Signatures
   if (y > pageHeight - 70) { doc.addPage(); y = 20 }
   y = pageHeight - 60
+  
+  // Technician Signature
   doc.setDrawColor(148, 163, 184); doc.line(margin, y, margin + 70, y)
-  doc.setFontSize(9); doc.text('Firma del Técnico Responsable', margin, y + 6); doc.text(tecnico, margin, y + 12)
-  if (firmaData) doc.addImage(firmaData, 'PNG', margin, y - 25, 50, 20)
+  doc.setFontSize(9); doc.setTextColor(71, 85, 105)
+  doc.text('Firma del Técnico Responsable', margin, y + 6)
+  doc.setFontSize(10); doc.setTextColor(30, 41, 59)
+  doc.text(tecnico || 'N/A', margin, y + 12)
+  if (firma_tecnico) { 
+    const fTec = await getImgData(firma_tecnico)
+    if (fTec) doc.addImage(fTec, 'PNG', margin, y - 25, 50, 20)
+  }
+
+  // Client Signature
+  const clientX = pageWidth - margin - 70
+  doc.setDrawColor(148, 163, 184); doc.line(clientX, y, pageWidth - margin, y)
+  doc.setFontSize(9); doc.setTextColor(71, 85, 105)
+  doc.text('Firma de Conformidad Cliente', clientX, y + 6)
+  doc.setFontSize(10); doc.setTextColor(30, 41, 59)
+  doc.text(cliente?.nombre || 'N/A', clientX, y + 12)
+  if (firmaData) doc.addImage(firmaData, 'PNG', clientX, y - 25, 50, 20)
 
   // Photos
   if (fotos.length > 0) {

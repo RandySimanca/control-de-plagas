@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   telefono TEXT,
   rol TEXT NOT NULL DEFAULT 'tecnico' CHECK (rol IN ('admin', 'tecnico', 'cliente')),
   especialidad TEXT,
+  firma_url TEXT,
   activo BOOLEAN NOT NULL DEFAULT true,
   cliente_id UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
