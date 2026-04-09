@@ -11,7 +11,9 @@ export default function Certificados() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { 
+    if (profile || isAdmin) load() 
+  }, [profile, isAdmin])
 
   async function load() {
     try {
@@ -36,6 +38,7 @@ export default function Certificados() {
       setCertificados(data || [])
     } catch (err) {
       console.error('Error:', err)
+      toast.error('Error al cargar certificados')
     } finally {
       setLoading(false)
     }
@@ -69,10 +72,12 @@ export default function Certificados() {
     }
   }
 
-  const filtered = certificados.filter(c =>
-    c.folio?.toLowerCase().includes(search.toLowerCase()) ||
-    c.ordenes_servicio?.clientes?.nombre?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = certificados.filter(c => {
+    const folio = c.folio?.toLowerCase() || ''
+    const nombreCliente = c.ordenes_servicio?.clientes?.nombre?.toLowerCase() || ''
+    const searchTerm = search.toLowerCase()
+    return folio.includes(searchTerm) || nombreCliente.includes(searchTerm)
+  })
 
   if (loading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" /></div>
