@@ -116,25 +116,18 @@ export async function generarCertificado({ folio, cliente, orden, productos, tec
   if (y > pageHeight - 70) { doc.addPage(); y = 20 }
   y = pageHeight - 60
   
-  // Technician Signature
-  doc.setDrawColor(148, 163, 184); doc.line(margin, y, margin + 70, y)
+  // Technician Signature (Centered)
+  const sigWidth = 70
+  const sigX = (pageWidth - sigWidth) / 2
+  doc.setDrawColor(148, 163, 184); doc.line(sigX, y, sigX + sigWidth, y)
   doc.setFontSize(9); doc.setTextColor(71, 85, 105)
-  doc.text('Firma del Técnico Responsable', margin, y + 6)
+  doc.text('Firma del Técnico Responsable', pageWidth / 2, y + 6, { align: 'center' })
   doc.setFontSize(10); doc.setTextColor(30, 41, 59)
-  doc.text(tecnico || 'N/A', margin, y + 12)
+  doc.text(tecnico || 'N/A', pageWidth / 2, y + 12, { align: 'center' })
   if (firma_tecnico) { 
     const fTec = await getImgData(firma_tecnico)
-    if (fTec) doc.addImage(fTec, 'PNG', margin, y - 25, 50, 20)
+    if (fTec) doc.addImage(fTec, 'PNG', sigX + 10, y - 25, 50, 20)
   }
-
-  // Client Signature
-  const clientX = pageWidth - margin - 70
-  doc.setDrawColor(148, 163, 184); doc.line(clientX, y, pageWidth - margin, y)
-  doc.setFontSize(9); doc.setTextColor(71, 85, 105)
-  doc.text('Firma de Conformidad Cliente', clientX, y + 6)
-  doc.setFontSize(10); doc.setTextColor(30, 41, 59)
-  doc.text(cliente?.nombre || 'N/A', clientX, y + 12)
-  if (firmaData) doc.addImage(firmaData, 'PNG', clientX, y - 25, 50, 20)
 
   // Photos
   if (fotos.length > 0) {

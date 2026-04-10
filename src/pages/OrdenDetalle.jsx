@@ -9,7 +9,6 @@ import {
   History, MessageSquare, Upload, X, Plus, Trash2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import SignaturePad from '../components/SignaturePad'
 
 export default function OrdenDetalle() {
   const { id } = useParams()
@@ -21,8 +20,6 @@ export default function OrdenDetalle() {
   const [certificado, setCertificado] = useState(null)
   const [loading, setLoading] = useState(true)
   const [generando, setGenerando] = useState(false)
-  const [showSignature, setShowSignature] = useState(false)
-  const [capturandoFirma, setCapturandoFirma] = useState(false)
   const [actividades, setActividades] = useState([])
   const [showActivityModal, setShowActivityModal] = useState(false)
   const [newActivity, setNewActivity] = useState('')
@@ -87,41 +84,6 @@ export default function OrdenDetalle() {
     }
   }
 
-  async function handleSaveSignature(blob) {
-    setCapturandoFirma(true)
-    try {
-      const path = `firmas/firma_${id}_${Date.now()}.png`
-      const { error: uploadErr } = await supabase.storage.from('fotos-servicio').upload(path, blob)
-      if (uploadErr) throw uploadErr
-
-      const { data: urlData } = supabase.storage.from('fotos-servicio').getPublicUrl(path)
-      const firmaUrl = urlData.publicUrl
-
-      // Ensure certificate exists or will be created
-      if (!certificado) {
-        const folio = `PC-${Date.now().toString(36).toUpperCase()}`
-        await supabase.from('certificados').upsert({ 
-          orden_id: id, 
-          folio, 
-          firma_url: firmaUrl 
-        }, { onConflict: 'orden_id' })
-        setCertificado({ folio, firma_url: firmaUrl })
-      } else {
-        await supabase.from('certificados').update({ 
-          firma_url: firmaUrl 
-        }).eq('orden_id', id)
-        setCertificado(prev => ({ ...prev, firma_url: firmaUrl }))
-      }
-
-      await cambiarEstado('completada')
-      setShowSignature(false)
-      toast.success('Firma guardada y orden completada')
-    } catch (err) {
-      toast.error('Error guardando firma: ' + err.message)
-    } finally {
-      setCapturandoFirma(false)
-    }
-  }
 
   async function handleGenerarCertificado() {
     setGenerando(true)
@@ -270,8 +232,8 @@ export default function OrdenDetalle() {
               </button>
             )}
             {isAssignedTecnico && orden.estado === 'en_progreso' && (
-              <button onClick={() => setShowSignature(true)} className="btn-primary text-sm">
-                <CheckCircle2 className="w-4 h-4" /> Completar y Firmar
+              <button onClick={() => cambiarEstado('completada')} className="btn-primary text-sm">
+                <CheckCircle2 className="w-4 h-4" /> Finalizar Servicio
               </button>
             )}
             {canManage && (
@@ -408,22 +370,6 @@ export default function OrdenDetalle() {
           </button>
         )}
       </div>
-      {/* Signature Modal */}
-      {showSignature && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          {capturandoFirma ? (
-            <div className="bg-white p-8 rounded-2xl flex flex-col items-center shadow-2xl">
-              <Loader2 className="w-10 h-10 text-primary-600 animate-spin mb-4" />
-              <p className="text-dark-600 font-medium">Guardando firma y completando orden...</p>
-            </div>
-          ) : (
-            <SignaturePad 
-              onSave={handleSaveSignature} 
-              onCancel={() => setShowSignature(false)} 
-            />
-          )}
-        </div>
-      )}
 
       {/* Activity Modal */}
       {showActivityModal && (
