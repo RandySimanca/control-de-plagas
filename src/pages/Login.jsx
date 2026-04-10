@@ -87,7 +87,7 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <a href="/portal" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            <a href="/portalLogin" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               ¿Eres cliente? Accede al portal →
             </a>
           </div>
