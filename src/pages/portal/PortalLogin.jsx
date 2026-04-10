@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
+import RoleModal from '../../components/RoleModal'
 import { Bug, LogIn, Loader2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -9,7 +11,8 @@ export default function PortalLogin() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const [showRoleModal, setShowRoleModal] = useState(false)
+  const { login, logout } = useAuth()
   const navigate = useNavigate()
 
   async function handleSubmit(e) {
@@ -17,10 +20,26 @@ export default function PortalLogin() {
     if (!email || !password) { toast.error('Ingresa tus credenciales'); return }
     setLoading(true)
     try {
-      await login(email, password)
+      const { user } = await login(email, password)
+      
+      // Verificar rol inmediatamente
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) throw profileError
+
+      if (profile?.rol !== 'cliente') {
+        setShowRoleModal(true)
+        return
+      }
+
       toast.success('¡Bienvenido al portal!')
       navigate('/portal')
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err)
       toast.error('Credenciales incorrectas')
     } finally {
       setLoading(false)
@@ -73,6 +92,17 @@ export default function PortalLogin() {
           </div>
         </div>
       </div>
+
+      <RoleModal
+        isOpen={showRoleModal}
+        onClose={async () => {
+          await logout()
+          navigate('/login')
+        }}
+        title="Acceso de Personal"
+        message="Esta cuenta pertenece al equipo técnico o administrativo. Por favor, utiliza el acceso para personal."
+        buttonText="Ir al Login de Personal"
+      />
     </div>
   )
 }

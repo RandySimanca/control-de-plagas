@@ -14,8 +14,11 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (!user) return <Navigate to="/login" replace />
+  
+  // Si se requieren roles pero no hay perfil, redirigir al login
+  if (allowedRoles && !profile) return <Navigate to="/login" replace />
 
-  if (allowedRoles && profile && !allowedRoles.includes(profile.rol)) {
+  if (allowedRoles && !allowedRoles.includes(profile.rol)) {
     if (profile.rol === 'cliente') return <Navigate to="/portal" replace />
     return <Navigate to="/" replace />
   }

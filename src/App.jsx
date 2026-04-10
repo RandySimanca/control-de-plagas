@@ -24,15 +24,16 @@ import DocumentosLegales from './pages/admin/DocumentosLegales'
 function AppRoutes() {
   const { user, profile, loading } = useAuth()
 
-  if (loading) return null
+  // Quitamos el return null global para que las páginas de login no se desmonten durante la carga del perfil
+  // El estado de carga lo manejará cada ruta o componente que lo necesite
 
   return (
     <Routes>
       {/* Auth */}
-      <Route path="/login" element={user ? <Navigate to={profile?.rol === 'cliente' ? '/portal' : '/'} /> : <Login />} />
+      <Route path="/login" element={user && profile && profile.rol !== 'cliente' ? <Navigate to="/" /> : <Login />} />
 
       {/* Portal de Clientes */}
-      <Route path="/portal/login" element={user ? <Navigate to="/portal" /> : <PortalLogin />} />
+      <Route path="/portal/login" element={user && profile && profile.rol === 'cliente' ? <Navigate to="/portal" /> : <PortalLogin />} />
       <Route path="/portal" element={
         <ProtectedRoute allowedRoles={['cliente']}>
           <PortalHistorial />
