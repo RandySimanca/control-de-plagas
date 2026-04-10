@@ -31,19 +31,21 @@ export default function OrdenDetalle() {
   async function load() {
     try {
       const [ordenRes, prodsRes, fotosRes, certRes, actividadesRes] = await Promise.all([
-        supabase.from('ordenes_servicio').select(`*, clientes(*), profiles(nombre_completo, especialidad, firma_url)`).eq('id', id).single(),
+        supabase.from('ordenes_servicio').select(`*, clientes(*), profiles(*)`).eq('id', id).single(),
         supabase.from('productos_usados').select('*').eq('orden_id', id),
         supabase.from('fotos_servicio').select('*').eq('orden_id', id),
         supabase.from('certificados').select('*').eq('orden_id', id).maybeSingle(),
-        supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: false })
+        supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: true })
       ])
+
       if (ordenRes.error) throw ordenRes.error
       setOrden(ordenRes.data)
       setProductos(prodsRes.data || [])
       setFotos(fotosRes.data || [])
       setCertificado(certRes.data)
       setActividades(actividadesRes.data || [])
-    } catch {
+    } catch (err) {
+      console.error('Error loading order details:', err)
       toast.error('Error cargando orden')
       navigate('/ordenes')
     } finally {

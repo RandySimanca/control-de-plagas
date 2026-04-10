@@ -50,7 +50,8 @@ export default function OrdenForm() {
       if (ordenRes.error) throw ordenRes.error
       setForm(ordenRes.data)
       if (prodsRes.data?.length) setProductos(prodsRes.data)
-    } catch {
+    } catch (err) {
+      console.error('Error loading order for edit:', err)
       toast.error('Error cargando orden')
       navigate('/ordenes')
     } finally {
