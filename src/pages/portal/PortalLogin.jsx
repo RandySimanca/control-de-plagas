@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Bug, LogIn, Loader2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -67,9 +67,9 @@ export default function PortalLogin() {
             </button>
           </form>
           <div className="mt-6 text-center">
-            <a href="/login" className="text-sm text-primary-400 hover:text-primary-300 font-medium">
-              ← Acceso para empleados
-            </a>
+            <Link to="/login" className="text-sm text-primary-400 hover:text-primary-300 font-medium">
+              ← Acceso para Técnicos y Personal
+            </Link>
           </div>
         </div>
       </div>

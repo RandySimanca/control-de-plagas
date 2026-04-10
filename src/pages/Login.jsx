@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Bug, LogIn, Loader2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -87,9 +87,9 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center">
-            <a href="/portalLogin" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/portal/login" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               ¿Eres cliente? Accede al portal →
-            </a>
+            </Link>
           </div>
         </div>
       </div>
