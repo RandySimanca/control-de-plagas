@@ -14,6 +14,7 @@ export default function Ordenes() {
 
   useEffect(() => { 
     if (profile || isAdmin) loadOrdenes() 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, isAdmin])
 
   async function handleDelete(e, id) {
@@ -28,7 +29,7 @@ export default function Ordenes() {
       setOrdenes(ordenes.filter(o => o.id !== id))
       toast.success('Orden eliminada')
     } catch (err) {
-      toast.error('Error al eliminar')
+      toast.error('Error al eliminar: ' + err.message)
     }
   }
 

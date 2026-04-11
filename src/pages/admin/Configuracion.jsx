@@ -13,7 +13,10 @@ export default function Configuracion() {
     telefono_contacto: '',
     direccion_fiscal: '',
     footer_pdf: '',
-    logo_url: ''
+    logo_url: '',
+    recomendaciones_generales: '',
+    version_informe: '',
+    fecha_modelo_informe: ''
   })
 
   useEffect(() => {
@@ -129,6 +132,27 @@ export default function Configuracion() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="label-field">Versión del Modelo (PDF)</label>
+                  <input
+                    type="text" className="input-field"
+                    value={form.version_informe || ''}
+                    onChange={e => setForm(prev => ({ ...prev, version_informe: e.target.value }))}
+                    placeholder="Ej: 2, 3, 1.4"
+                  />
+                </div>
+                <div>
+                  <label className="label-field">Fecha del Modelo (PDF)</label>
+                  <input
+                    type="text" className="input-field"
+                    value={form.fecha_modelo_informe || ''}
+                    onChange={e => setForm(prev => ({ ...prev, fecha_modelo_informe: e.target.value }))}
+                    placeholder="Ej: 14/04/2026"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="label-field font-medium text-dark-700">Texto para el Footer del PDF</label>
                 <textarea
@@ -137,6 +161,17 @@ export default function Configuracion() {
                   onChange={e => setForm(prev => ({ ...prev, footer_pdf: e.target.value }))}
                   placeholder="Ej: Gracias por confiar en PlagControl. Este certificado es válido por 6 meses."
                 />
+              </div>
+
+              <div>
+                <label className="label-field font-medium text-dark-700">Recomendaciones Generales para el PDF</label>
+                <textarea
+                  className="input-field mt-1 text-sm leading-relaxed" rows={5}
+                  value={form.recomendaciones_generales || ''}
+                  onChange={e => setForm(prev => ({ ...prev, recomendaciones_generales: e.target.value }))}
+                  placeholder="Introduce una recomendación por línea..."
+                />
+                <p className="text-xs text-dark-400 mt-1">Cada salto de línea se listará como un punto separado (formato viñeta) en la sección 7 del certificado.</p>
               </div>
 
               <button type="submit" disabled={saving} className="btn-primary w-full mt-4">

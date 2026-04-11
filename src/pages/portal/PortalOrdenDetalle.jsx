@@ -231,9 +231,32 @@ export default function PortalOrdenDetalle() {
             </h2>
             <div className="space-y-3 mt-4">
               {estaciones.map((e, i) => (
-                <div key={i} className="bg-dark-50 p-3 rounded-xl border border-dark-100 flex justify-between items-center">
-                  <span className="text-sm font-bold text-dark-900">{e.tipo_estacion}</span>
-                  <span className="text-sm font-bold text-dark-800 bg-white px-3 py-1 rounded-lg border border-dark-200 shadow-sm">{e.cantidad}</span>
+                <div key={i} className="bg-dark-50 p-3 rounded-xl border border-dark-100">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-bold text-dark-900">{e.tipo_estacion}</span>
+                    <span className="text-sm font-bold text-dark-800 bg-white px-3 py-1 rounded-lg border border-dark-200 shadow-sm">{e.cantidad}</span>
+                  </div>
+                  {e.observaciones && (
+                    <p className="text-xs text-dark-600 bg-white/50 p-2 rounded-lg border border-dark-100 italic">
+                      {e.observaciones}
+                    </p>
+                  )}
+                  {(e.foto_antes_url || e.foto_despues_url) && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      {e.foto_antes_url && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-dark-400 uppercase">Antes</p>
+                          <img src={e.foto_antes_url} className="rounded-lg w-full aspect-video object-cover border border-dark-100" />
+                        </div>
+                      )}
+                      {e.foto_despues_url && (
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-dark-400 uppercase">Después</p>
+                          <img src={e.foto_despues_url} className="rounded-lg w-full aspect-video object-cover border border-dark-100" />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
