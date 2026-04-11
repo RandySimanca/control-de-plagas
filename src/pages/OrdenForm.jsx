@@ -21,6 +21,7 @@ export default function OrdenForm() {
     tecnico_id: profile?.id || '',
     fecha_programada: new Date().toISOString().split('T')[0],
     tipo_plaga: '',
+    areas_intervenidas: '',
     observaciones: '',
     estado: 'programada',
   })
@@ -73,6 +74,7 @@ export default function OrdenForm() {
         const { error } = await supabase.from('ordenes_servicio').update({
           cliente_id: form.cliente_id, tecnico_id: form.tecnico_id || null,
           fecha_programada: form.fecha_programada, tipo_plaga: form.tipo_plaga,
+          areas_intervenidas: form.areas_intervenidas,
           observaciones: form.observaciones, estado: form.estado,
           updated_at: new Date().toISOString()
         }).eq('id', id)
@@ -81,6 +83,7 @@ export default function OrdenForm() {
         const { data, error } = await supabase.from('ordenes_servicio').insert({
           cliente_id: form.cliente_id, tecnico_id: form.tecnico_id || profile?.id,
           fecha_programada: form.fecha_programada, tipo_plaga: form.tipo_plaga,
+          areas_intervenidas: form.areas_intervenidas,
           observaciones: form.observaciones, estado: form.estado
         }).select('id').single()
         if (error) throw error
@@ -247,10 +250,22 @@ export default function OrdenForm() {
             </button>
           </div>
 
+          {/* Areas Intervenidas */}
+          <div>
+            <label className="label-field">Áreas Intervenidas</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              value={form.areas_intervenidas || ''} 
+              onChange={e => handleChange('areas_intervenidas', e.target.value)} 
+              placeholder="Ej: Cocina, Bodega, Baños, Perímetros exteriores..." 
+            />
+          </div>
+
           {/* Observations */}
           <div>
-            <label className="label-field">Observaciones</label>
-            <textarea className="input-field" rows={3} value={form.observaciones || ''} onChange={e => handleChange('observaciones', e.target.value)} placeholder="Notas internas o del servicio..." />
+            <label className="label-field">Observaciones Generales</label>
+            <textarea className="input-field" rows={2} value={form.observaciones || ''} onChange={e => handleChange('observaciones', e.target.value)} placeholder="Notas adicionales del servicio..." />
           </div>
 
 

@@ -370,7 +370,14 @@ export default function OrdenDetalle() {
               </div>
             </div>
             <p className="text-sm text-dark-400">Orden creada el {new Date(orden.created_at).toLocaleDateString('es')}</p>
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-dark-50 border border-dark-100">
+            <MapPin className="w-5 h-5 text-dark-400 mt-1" />
+            <div>
+              <p className="text-xs font-medium text-dark-400 uppercase tracking-wider">Áreas Intervenidas</p>
+              <p className="text-sm text-dark-800 font-semibold">{orden.areas_intervenidas || 'No especificadas'}</p>
+            </div>
           </div>
+        </div>
           <div className="flex flex-wrap gap-2">
             {isAssignedTecnico && orden.estado === 'programada' && (
               <button onClick={() => cambiarEstado('en_progreso')} className="btn-secondary text-sm">

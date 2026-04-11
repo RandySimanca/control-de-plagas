@@ -133,16 +133,24 @@ export default function PortalOrdenDetalle() {
                   <p className="font-medium text-dark-800">{orden.clientes?.nombre}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-dark-600">
-                <Package className="w-5 h-5 text-primary-600" />
-                <div>
-                  <p className="text-xs uppercase tracking-wider font-bold text-dark-400">Tipo de Control</p>
-                  <p className="font-medium text-dark-800">{orden.tipo_plaga || 'Servicio Integral'}</p>
+                <div className="flex items-center gap-3 text-dark-600">
+                  <Package className="w-5 h-5 text-primary-600" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider font-bold text-dark-400">Tipo de Control</p>
+                    <p className="font-medium text-dark-800">{orden.tipo_plaga || 'Servicio Integral'}</p>
+                  </div>
                 </div>
               </div>
             </div>
+            {/* New Areas Intervenidas Block for Portal */}
+            <div className="mt-4 pt-4 border-t border-dark-100 flex items-start gap-3">
+              <MapPin className="w-5 h-5 text-primary-600 mt-0.5" />
+              <div>
+                <p className="text-xs uppercase tracking-wider font-bold text-dark-400">Áreas Intervenidas</p>
+                <p className="text-sm text-dark-700">{orden.areas_intervenidas || 'General / Todo el establecimiento'}</p>
+              </div>
+            </div>
           </div>
-        </div>
 
         {/* Bitácora en Tiempo Real */}
         <div className="card shadow-sm border-l-4 border-l-primary-500">
