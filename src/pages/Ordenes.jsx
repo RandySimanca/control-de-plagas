@@ -118,7 +118,7 @@ export default function Ordenes() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="input-field pl-10"
-          placeholder="Buscar por cliente o tipo de plaga..."
+          placeholder="Buscar por cliente o tipo de control..."
         />
       </div>
 

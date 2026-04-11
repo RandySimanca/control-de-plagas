@@ -14,6 +14,7 @@ export default function PortalOrdenDetalle() {
   const navigate = useNavigate()
   const [orden, setOrden] = useState(null)
   const [productos, setProductos] = useState([])
+  const [estaciones, setEstaciones] = useState([])
   const [fotos, setFotos] = useState([])
   const [actividades, setActividades] = useState([])
   const [certificado, setCertificado] = useState(null)
@@ -24,17 +25,19 @@ export default function PortalOrdenDetalle() {
 
   async function load() {
     try {
-      const [ordenRes, prodsRes, fotosRes, certRes, actividadesRes] = await Promise.all([
+      const [ordenRes, prodsRes, fotosRes, certRes, actividadesRes, estacRes] = await Promise.all([
         supabase.from('ordenes_servicio').select(`*, clientes(*), profiles!tecnico_id(nombre_completo)`).eq('id', id).single(),
         supabase.from('productos_usados').select('*').eq('orden_id', id),
         supabase.from('fotos_servicio').select('*').eq('orden_id', id),
         supabase.from('certificados').select('*').eq('orden_id', id).order('created_at', { ascending: false }),
-        supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: false })
+        supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: false }),
+        supabase.from('estaciones_usadas').select('*').eq('orden_id', id)
       ])
       
       if (ordenRes.error) throw ordenRes.error
       setOrden(ordenRes.data)
       setProductos(prodsRes.data || [])
+      setEstaciones(estacRes.data || [])
       setFotos(fotosRes.data || [])
       
       // Tomar el primer certificado (el más reciente)
@@ -59,6 +62,7 @@ export default function PortalOrdenDetalle() {
         cliente: orden.clientes,
         orden,
         productos,
+        estaciones,
         tecnico: orden.profiles?.nombre_completo || 'N/A',
         config,
         firma: certificado.firma_url,
@@ -190,14 +194,63 @@ export default function PortalOrdenDetalle() {
             <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2 mb-4">
               <FileText className="w-5 h-5 text-primary-600" /> Tratamiento Aplicado
             </h2>
-            <div className="divide-y divide-dark-100">
+            <div className="space-y-3 mt-4">
               {productos.map((p, i) => (
-                <div key={i} className="py-3 flex justify-between items-center text-sm">
-                  <span className="text-dark-700 font-medium">{p.nombre_producto}</span>
-                  <span className="bg-dark-100 text-dark-600 px-3 py-1 rounded-full text-xs font-bold">{p.cantidad}</span>
+                <div key={i} className="bg-dark-50 p-3 rounded-xl border border-dark-100">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="text-xs font-bold text-primary-600 uppercase tracking-wider block mb-0.5">{p.tipo_producto || 'Producto Aplicado'}</span>
+                      <span className="text-sm font-bold text-dark-900">{p.nombre_comercial || p.nombre_producto || 'Sin especificar'}</span>
+                    </div>
+                    <span className="text-sm font-bold text-dark-800 bg-white px-2 py-1 rounded-lg border border-dark-200 shadow-sm">{p.cantidad || 'N/A'}</span>
+                  </div>
+                  {p.ingrediente_activo && (
+                    <div className="text-xs text-dark-500 border-t border-dark-100 pt-2 mt-2">
+                      <span className="font-semibold text-dark-700">Ingrediente activo:</span> {p.ingrediente_activo}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Estaciones */}
+        {estaciones.length > 0 && (
+          <div className="card shadow-sm">
+            <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2 mb-4">
+              <Package className="w-5 h-5 text-primary-600" /> Estaciones / Dispositivos
+            </h2>
+            <div className="space-y-3 mt-4">
+              {estaciones.map((e, i) => (
+                <div key={i} className="bg-dark-50 p-3 rounded-xl border border-dark-100 flex justify-between items-center">
+                  <span className="text-sm font-bold text-dark-900">{e.tipo_estacion}</span>
+                  <span className="text-sm font-bold text-dark-800 bg-white px-3 py-1 rounded-lg border border-dark-200 shadow-sm">{e.cantidad}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recomendaciones */}
+        {(orden.recomendaciones || orden.observaciones) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {orden.recomendaciones && (
+              <div className="card shadow-sm border-l-4 border-l-primary-500">
+                <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-5 h-5 text-primary-600" /> Recomendaciones del Técnico
+                </h2>
+                <p className="text-dark-700 whitespace-pre-wrap bg-dark-50 p-4 rounded-xl text-sm leading-relaxed">{orden.recomendaciones}</p>
+              </div>
+            )}
+            {orden.observaciones && (
+              <div className="card shadow-sm">
+                <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2 mb-4">
+                  <FileText className="w-5 h-5 text-primary-600" /> Observaciones del Servicio
+                </h2>
+                <p className="text-dark-700 whitespace-pre-wrap bg-dark-50 p-4 rounded-xl text-sm leading-relaxed">{orden.observaciones}</p>
+              </div>
+            )}
           </div>
         )}
 

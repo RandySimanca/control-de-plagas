@@ -16,7 +16,7 @@ async function getImgData(url) {
   }
 }
 
-export async function generarCertificado({ folio, cliente, orden, productos, tecnico, config, firma, actividades = [], fotos = [], firma_tecnico }) {
+export async function generarCertificado({ folio, cliente, orden, productos, estaciones = [], tecnico, config, firma, actividades = [], fotos = [], firma_tecnico }) {
   const doc = new jsPDF()
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
@@ -105,11 +105,57 @@ export async function generarCertificado({ folio, cliente, orden, productos, tec
     doc.setFontSize(13); doc.setTextColor(30, 41, 59); doc.text('Productos Utilizados', margin, y)
     y += 8
     productos.forEach(p => {
-      doc.setFontSize(10); doc.text(p.nombre_producto, margin + 3, y)
-      doc.text(p.cantidad, pageWidth - margin - 3, y, { align: 'right' })
+      const nombreYTipo = `${p.tipo_producto ? p.tipo_producto + ' - ' : ''}${p.nombre_comercial || p.nombre_producto || ''}`
+      doc.setFontSize(10); doc.setFont(undefined, 'bold')
+      doc.text(nombreYTipo, margin + 3, y)
+      doc.text(p.cantidad || '', pageWidth - margin - 3, y, { align: 'right' })
+      if (p.ingrediente_activo) {
+        y += 5
+        doc.setFontSize(9); doc.setFont(undefined, 'normal'); doc.setTextColor(100, 100, 100)
+        doc.text(`I.A.: ${p.ingrediente_activo}`, margin + 6, y)
+      }
       y += 7
+      doc.setTextColor(30, 41, 59)
     })
     y += 10
+  }
+
+  // Estaciones
+  if (estaciones && estaciones.length > 0) {
+    if (y > pageHeight - 60) { doc.addPage(); y = 20 }
+    doc.setFontSize(13); doc.setTextColor(30, 41, 59); doc.text('Estaciones Instaladas / Revisadas', margin, y)
+    y += 8
+    estaciones.forEach(e => {
+      doc.setFontSize(10); doc.setFont(undefined, 'bold')
+      doc.text(e.tipo_estacion, margin + 3, y)
+      doc.text(e.cantidad || '', pageWidth - margin - 3, y, { align: 'right' })
+      y += 7
+      doc.setTextColor(30, 41, 59)
+    })
+    y += 10
+  }
+
+  // Observaciones y Recomendaciones
+  if (orden.observaciones || orden.recomendaciones) {
+    if (y > pageHeight - 40) { doc.addPage(); y = 20 }
+    doc.setFontSize(13); doc.setTextColor(30, 41, 59); doc.text('Observaciones y Recomendaciones', margin, y)
+    y += 8
+    
+    if (orden.observaciones) {
+      doc.setFontSize(10); doc.setFont(undefined, 'bold'); doc.text('Observaciones del Servicio:', margin, y); y += 5
+      doc.setFont(undefined, 'normal'); doc.setTextColor(71, 85, 105)
+      const lines = doc.splitTextToSize(orden.observaciones, pageWidth - 2 * margin)
+      doc.text(lines, margin, y)
+      y += lines.length * 5 + 4
+    }
+    
+    if (orden.recomendaciones) {
+      doc.setFontSize(10); doc.setFont(undefined, 'bold'); doc.setTextColor(30, 41, 59); doc.text('Recomendaciones del Técnico:', margin, y); y += 5
+      doc.setFont(undefined, 'normal'); doc.setTextColor(71, 85, 105)
+      const lines = doc.splitTextToSize(orden.recomendaciones, pageWidth - 2 * margin)
+      doc.text(lines, margin, y)
+      y += lines.length * 5 + 4
+    }
   }
 
   // Signatures

@@ -24,7 +24,8 @@ export default function OrdenForm() {
     observaciones: '',
     estado: 'programada',
   })
-  const [productos, setProductos] = useState([{ nombre_producto: '', cantidad: '' }])
+  const [productos, setProductos] = useState([{ tipo_producto: '', nombre_comercial: '', ingrediente_activo: '', cantidad: '' }])
+  const [estaciones, setEstaciones] = useState([{ tipo_estacion: '', cantidad: '' }])
 
   useEffect(() => {
     loadData()
@@ -43,13 +44,15 @@ export default function OrdenForm() {
   async function loadOrden() {
     setLoading(true)
     try {
-      const [ordenRes, prodsRes] = await Promise.all([
+      const [ordenRes, prodsRes, estacRes] = await Promise.all([
         supabase.from('ordenes_servicio').select('*').eq('id', id).single(),
-        supabase.from('productos_usados').select('*').eq('orden_id', id)
+        supabase.from('productos_usados').select('*').eq('orden_id', id),
+        supabase.from('estaciones_usadas').select('*').eq('orden_id', id)
       ])
       if (ordenRes.error) throw ordenRes.error
       setForm(ordenRes.data)
       if (prodsRes.data?.length) setProductos(prodsRes.data)
+      if (estacRes.data?.length) setEstaciones(estacRes.data)
     } catch (err) {
       console.error('Error loading order for edit:', err)
       toast.error('Error cargando orden')
@@ -85,12 +88,31 @@ export default function OrdenForm() {
       }
 
       // Save products
-      const validProds = productos.filter(p => p.nombre_producto.trim())
+      const validProds = productos.filter(p => (p.nombre_comercial && p.nombre_comercial.trim()) || (p.nombre_producto && p.nombre_producto.trim()))
       if (validProds.length > 0) {
         if (isEdit) await supabase.from('productos_usados').delete().eq('orden_id', ordenId)
         await supabase.from('productos_usados').insert(
-          validProds.map(p => ({ orden_id: ordenId, nombre_producto: p.nombre_producto, cantidad: p.cantidad }))
+          validProds.map(p => ({ 
+            orden_id: ordenId, 
+            tipo_producto: p.tipo_producto,
+            nombre_comercial: p.nombre_comercial || p.nombre_producto,
+            ingrediente_activo: p.ingrediente_activo,
+            cantidad: p.cantidad 
+          }))
         )
+      } else if (isEdit) {
+        await supabase.from('productos_usados').delete().eq('orden_id', ordenId)
+      }
+
+      // Save estaciones
+      const validEstaciones = estaciones.filter(e => e.tipo_estacion && e.cantidad)
+      if (validEstaciones.length > 0) {
+        if (isEdit) await supabase.from('estaciones_usadas').delete().eq('orden_id', ordenId)
+        await supabase.from('estaciones_usadas').insert(
+          validEstaciones.map(e => ({ orden_id: ordenId, tipo_estacion: e.tipo_estacion, cantidad: e.cantidad }))
+        )
+      } else if (isEdit) {
+        await supabase.from('estaciones_usadas').delete().eq('orden_id', ordenId)
       }
 
 
@@ -109,6 +131,10 @@ export default function OrdenForm() {
 
   function updateProducto(idx, field, value) {
     setProductos(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p))
+  }
+
+  function updateEstacion(idx, field, value) {
+    setEstaciones(prev => prev.map((e, i) => i === idx ? { ...e, [field]: value } : e))
   }
 
   if (loading) {
@@ -150,8 +176,13 @@ export default function OrdenForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="label-field">Tipo de plaga</label>
-              <input className="input-field" value={form.tipo_plaga || ''} onChange={e => handleChange('tipo_plaga', e.target.value)} placeholder="Ej: Cucarachas, Roedores..." />
+              <label className="label-field">Tipo de Control</label>
+              <select className="input-field" value={form.tipo_plaga || ''} onChange={e => handleChange('tipo_plaga', e.target.value)}>
+                <option value="">Seleccione un tipo...</option>
+                <option value="Desinsectación">Desinsectación</option>
+                <option value="Desratización">Desratización</option>
+                <option value="Desinfección">Desinfección</option>
+              </select>
             </div>
             <div>
               <label className="label-field">Estado</label>
@@ -166,28 +197,60 @@ export default function OrdenForm() {
           {/* Products */}
           <div>
             <label className="label-field">Productos utilizados</label>
-            <div className="space-y-2">
+            <div className="space-y-4">
               {productos.map((p, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <input className="input-field flex-1" value={p.nombre_producto} onChange={e => updateProducto(idx, 'nombre_producto', e.target.value)} placeholder="Nombre del producto" />
-                  <input className="input-field w-28" value={p.cantidad} onChange={e => updateProducto(idx, 'cantidad', e.target.value)} placeholder="Cantidad" />
+                <div key={idx} className="flex flex-col sm:flex-row gap-2 border border-dark-200 p-3 rounded-xl bg-dark-50/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 flex-1">
+                    <input className="input-field text-sm" value={p.tipo_producto || ''} onChange={e => updateProducto(idx, 'tipo_producto', e.target.value)} placeholder="Tipo de producto" />
+                    <input className="input-field text-sm" value={p.nombre_comercial || p.nombre_producto || ''} onChange={e => updateProducto(idx, 'nombre_comercial', e.target.value)} placeholder="Nombre Comercial" />
+                    <input className="input-field text-sm" value={p.ingrediente_activo || ''} onChange={e => updateProducto(idx, 'ingrediente_activo', e.target.value)} placeholder="Ingrediente Activo" />
+                    <input className="input-field text-sm" value={p.cantidad || ''} onChange={e => updateProducto(idx, 'cantidad', e.target.value)} placeholder="Cant. (Ej: 2L)" />
+                  </div>
                   {productos.length > 1 && (
-                    <button type="button" onClick={() => setProductos(prev => prev.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                      <Trash2 className="w-4 h-4" />
+                    <button type="button" onClick={() => setProductos(prev => prev.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-100 rounded-lg shrink-0 self-start sm:self-center mt-2 sm:mt-0">
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   )}
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => setProductos(prev => [...prev, { nombre_producto: '', cantidad: '' }])} className="btn-ghost text-sm mt-2 text-primary-600">
+            <button type="button" onClick={() => setProductos(prev => [...prev, { tipo_producto: '', nombre_comercial: '', ingrediente_activo: '', cantidad: '' }])} className="btn-ghost text-sm mt-3 text-primary-600 border border-primary-100 bg-primary-50">
               <Plus className="w-4 h-4" /> Agregar producto
+            </button>
+          </div>
+
+          {/* Estaciones */}
+          <div>
+            <label className="label-field">Estaciones instaladas / revisadas</label>
+            <div className="space-y-4">
+              {estaciones.map((e, idx) => (
+                <div key={idx} className="flex flex-col sm:flex-row gap-2 border border-dark-200 p-3 rounded-xl bg-dark-50/50">
+                  <div className="flex-1 flex gap-2">
+                    <select className="input-field flex-1 text-sm font-medium" value={e.tipo_estacion || ''} onChange={ev => updateEstacion(idx, 'tipo_estacion', ev.target.value)}>
+                      <option value="">Seleccionar tipo...</option>
+                      <option value="Cebadero">Cebadero</option>
+                      <option value="Impacto">Impacto</option>
+                      <option value="Jaula atrapavivos">Jaula atrapavivos</option>
+                    </select>
+                    <input className="input-field w-32 text-sm" value={e.cantidad || ''} onChange={ev => updateEstacion(idx, 'cantidad', ev.target.value)} placeholder="Cantidad" />
+                  </div>
+                  {estaciones.length > 1 && (
+                    <button type="button" onClick={() => setEstaciones(prev => prev.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-100 rounded-lg shrink-0 mt-2 sm:mt-0 self-start sm:self-center">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={() => setEstaciones(prev => [...prev, { tipo_estacion: '', cantidad: '' }])} className="btn-ghost text-sm mt-3 text-primary-600 border border-primary-100 bg-primary-50">
+              <Plus className="w-4 h-4" /> Agregar estación
             </button>
           </div>
 
           {/* Observations */}
           <div>
             <label className="label-field">Observaciones</label>
-            <textarea className="input-field" rows={3} value={form.observaciones || ''} onChange={e => handleChange('observaciones', e.target.value)} placeholder="Notas del servicio..." />
+            <textarea className="input-field" rows={3} value={form.observaciones || ''} onChange={e => handleChange('observaciones', e.target.value)} placeholder="Notas internas o del servicio..." />
           </div>
 
 
