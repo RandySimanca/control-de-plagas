@@ -34,6 +34,11 @@ export default function OrdenDetalle() {
   const [savingRecomendaciones, setSavingRecomendaciones] = useState(false)
   const [uploadingFotos, setUploadingFotos] = useState(false)
 
+  // Edit Activity State
+  const [editingActivity, setEditingActivity] = useState(null)
+  const [showEditActivityModal, setShowEditActivityModal] = useState(false)
+  const [savingEditActivity, setSavingEditActivity] = useState(false)
+
   useEffect(() => { load() }, [id])
 
   async function load() {
@@ -192,6 +197,60 @@ export default function OrdenDetalle() {
       toast.error('Error: ' + err.message)
     } finally {
       setSavingActivity(false)
+    }
+  }
+
+  async function handleUpdateActivity(e) {
+    e.preventDefault()
+    if (!editingActivity || !editingActivity.descripcion.trim()) return
+    setSavingEditActivity(true)
+    try {
+      const { error } = await supabase
+        .from('actividades_servicio')
+        .update({ descripcion: editingActivity.descripcion })
+        .eq('id', editingActivity.id)
+      
+      if (error) throw error
+      
+      setActividades(actividades.map(a => a.id === editingActivity.id ? editingActivity : a))
+      setShowEditActivityModal(false)
+      setEditingActivity(null)
+      toast.success('Actividad actualizada')
+    } catch (err) {
+      toast.error('Error al actualizar: ' + err.message)
+    } finally {
+      setSavingEditActivity(false)
+    }
+  }
+
+  async function handleDeleteActivity(actId) {
+    if (!confirm('¿Estás seguro de eliminar esta nota de la bitácora?')) return
+    try {
+      const { error } = await supabase.from('actividades_servicio').delete().eq('id', actId)
+      if (error) throw error
+      setActividades(actividades.filter(a => a.id !== actId))
+      toast.success('Nota eliminada')
+    } catch (err) {
+      toast.error('Error al eliminar nota: ' + err.message)
+    }
+  }
+
+  async function handleDeletePhoto(foto) {
+    if (!confirm('¿Estás seguro de eliminar esta fotografía?')) return
+    try {
+      // 1. Delete from bucket
+      if (foto.storage_path) {
+        await supabase.storage.from('fotos-servicio').remove([foto.storage_path])
+      }
+
+      // 2. Delete from DB
+      const { error } = await supabase.from('fotos_servicio').delete().eq('id', foto.id)
+      if (error) throw error
+
+      setFotos(fotos.filter(f => f.id !== foto.id))
+      toast.success('Fotografía eliminada')
+    } catch (err) {
+      toast.error('Error al eliminar foto: ' + err.message)
     }
   }
 
@@ -435,7 +494,27 @@ export default function OrdenDetalle() {
                 <div className="bg-dark-50 p-4 rounded-xl border border-dark-100">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-primary-600 uppercase tracking-wider">Avance de Servicio</span>
-                    <span className="text-xs text-dark-400">{new Date(act.created_at).toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'})} - {new Date(act.created_at).toLocaleDateString('es')}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-dark-400">{new Date(act.created_at).toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'})} - {new Date(act.created_at).toLocaleDateString('es')}</span>
+                      {isAssignedTecnico && orden.estado === 'en_progreso' && (
+                        <div className="flex items-center gap-1.5">
+                          <button 
+                            onClick={() => { setEditingActivity({...act}); setShowEditActivityModal(true); }}
+                            className="p-1 text-dark-400 hover:text-primary-600 transition-colors"
+                            title="Editar Nota"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteActivity(act.id)}
+                            className="p-1 text-dark-400 hover:text-red-500 transition-colors"
+                            title="Eliminar Nota"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <p className="text-sm text-dark-700 leading-relaxed">{act.descripcion}</p>
                 </div>
@@ -469,9 +548,20 @@ export default function OrdenDetalle() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {fotos.map(f => (
-              <a key={f.id} href={f.url} target="_blank" rel="noopener" className="aspect-square rounded-xl overflow-hidden bg-dark-100 border border-dark-200">
-                <img src={f.url} alt="Foto servicio" className="w-full h-full object-cover hover:scale-105 transition-transform" />
-              </a>
+              <div key={f.id} className="relative group aspect-square rounded-xl overflow-hidden bg-dark-100 border border-dark-200">
+                <a href={f.url} target="_blank" rel="noopener">
+                  <img src={f.url} alt="Foto servicio" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                </a>
+                {isAssignedTecnico && orden.estado === 'en_progreso' && (
+                  <button 
+                    onClick={() => handleDeletePhoto(f)}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-red-600"
+                    title="Eliminar Foto"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}
@@ -569,6 +659,39 @@ export default function OrdenDetalle() {
                   {savingActivity ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Guardar Avance'}
                 </button>
                 <button type="button" onClick={() => setShowActivityModal(false)} className="btn-secondary">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Activity Modal */}
+      {showEditActivityModal && editingActivity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-dark-100 flex items-center justify-between">
+              <h3 className="font-bold text-dark-900">Editar Avance</h3>
+              <button onClick={() => setShowEditActivityModal(false)} className="p-2 hover:bg-dark-50 rounded-lg text-dark-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateActivity} className="p-6 space-y-4">
+              <div>
+                <label className="label-field">Descripción corregida</label>
+                <textarea 
+                  className="input-field min-h-[120px] resize-none" 
+                  value={editingActivity.descripcion} 
+                  onChange={e => setEditingActivity({...editingActivity, descripcion: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={savingEditActivity} className="btn-primary flex-1">
+                  {savingEditActivity ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Actualizar Nota'}
+                </button>
+                <button type="button" onClick={() => setShowEditActivityModal(false)} className="btn-secondary">
                   Cancelar
                 </button>
               </div>
