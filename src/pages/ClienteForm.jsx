@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function ClienteForm() {
@@ -22,6 +23,9 @@ export default function ClienteForm() {
     tipo: 'residencial', 
     notas: ''
   })
+  const [crearUsuario, setCrearUsuario] = useState(false)
+  const [userPassword, setUserPassword] = useState('')
+  const [tieneUsuario, setTieneUsuario] = useState(false)
 
   useEffect(() => {
     if (isEdit) loadCliente()
@@ -33,6 +37,9 @@ export default function ClienteForm() {
       const { data, error } = await supabase.from('clientes').select('*').eq('id', id).single()
       if (error) throw error
       setForm(data)
+      // Check if client already has a linked user
+      const { data: linkedUser } = await supabase.from('profiles').select('id').eq('cliente_id', id).maybeSingle()
+      setTieneUsuario(!!linkedUser)
     } catch {
       toast.error('Error cargando cliente')
       navigate('/clientes')
@@ -61,9 +68,39 @@ export default function ClienteForm() {
           updated_at: new Date().toISOString()
         }).eq('id', id)
         if (error) throw error
-        toast.success('Cliente actualizado')
+
+        // Crear cuenta de acceso al editar, si el toggle está activo y no tiene usuario
+        if (crearUsuario && !tieneUsuario && form.email && userPassword) {
+          const tempSupabase = createClient(
+            import.meta.env.VITE_SUPABASE_URL,
+            import.meta.env.VITE_SUPABASE_ANON_KEY,
+            { auth: { persistSession: false } }
+          )
+          const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+            email: form.email,
+            password: userPassword,
+            options: {
+              data: {
+                nombre_completo: form.nombre,
+                rol: 'cliente'
+              }
+            }
+          })
+          if (authError) {
+            toast.error('Cliente actualizado, pero error al crear usuario: ' + authError.message)
+          } else if (authData.user) {
+            await supabase.from('profiles').update({
+              rol: 'cliente',
+              cliente_id: id,
+              activo: true
+            }).eq('id', authData.user.id)
+            toast.success('Cliente actualizado y cuenta de acceso creada')
+          }
+        } else {
+          toast.success('Cliente actualizado')
+        }
       } else {
-        const { error } = await supabase.from('clientes').insert({
+        const { data: newCliente, error } = await supabase.from('clientes').insert({
           nombre: form.nombre,
           razon_social: form.razon_social,
           identificacion: form.identificacion,
@@ -74,9 +111,39 @@ export default function ClienteForm() {
           telefono_contacto: form.telefono_contacto,
           tipo: form.tipo,
           notas: form.notas
-        })
+        }).select().single()
         if (error) throw error
-        toast.success('Cliente creado')
+
+        // Crear cuenta de acceso si el toggle está activo
+        if (crearUsuario && form.email && userPassword) {
+          const tempSupabase = createClient(
+            import.meta.env.VITE_SUPABASE_URL,
+            import.meta.env.VITE_SUPABASE_ANON_KEY,
+            { auth: { persistSession: false } }
+          )
+          const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+            email: form.email,
+            password: userPassword,
+            options: {
+              data: {
+                nombre_completo: form.nombre,
+                rol: 'cliente'
+              }
+            }
+          })
+          if (authError) {
+            toast.error('Cliente creado, pero error al crear usuario: ' + authError.message)
+          } else if (authData.user) {
+            await supabase.from('profiles').update({
+              rol: 'cliente',
+              cliente_id: newCliente.id,
+              activo: true
+            }).eq('id', authData.user.id)
+            toast.success('Cliente y cuenta de acceso creados exitosamente')
+          }
+        } else {
+          toast.success('Cliente creado')
+        }
       }
       navigate('/clientes')
     } catch (err) {
@@ -170,6 +237,55 @@ export default function ClienteForm() {
               ))}
             </div>
           </div>
+
+          {(!isEdit || (isEdit && !tieneUsuario)) ? (
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 mt-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-bold text-blue-800">¿Crear cuenta de acceso al portal?</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={crearUsuario} onChange={e => setCrearUsuario(e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-dark-300 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              {crearUsuario && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-blue-200">
+                  <div>
+                    <label className="label-field !text-blue-700">Email de acceso</label>
+                    <input 
+                      className="input-field bg-white" 
+                      type="email" 
+                      value={form.email || ''} 
+                      onChange={e => handleChange('email', e.target.value)} 
+                      placeholder="correo@ejemplo.com" 
+                      required 
+                    />
+                    <p className="text-[10px] text-blue-500 mt-1">Se usa el mismo email del cliente</p>
+                  </div>
+                  <div>
+                    <label className="label-field !text-blue-700">Contraseña</label>
+                    <input 
+                      className="input-field bg-white" 
+                      type="password" 
+                      value={userPassword} 
+                      onChange={e => setUserPassword(e.target.value)} 
+                      placeholder="Mínimo 6 caracteres" 
+                      required 
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : isEdit && tieneUsuario ? (
+            <div className="bg-green-50 p-4 rounded-xl border border-green-200 mt-2 flex items-center gap-3">
+              <UserPlus className="w-5 h-5 text-green-600" />
+              <span className="text-sm font-medium text-green-800">Este cliente ya tiene una cuenta de acceso al portal.</span>
+            </div>
+          ) : null}
+
           <div>
             <label className="label-field">Notas</label>
             <textarea className="input-field" rows={3} value={form.notas || ''} onChange={e => handleChange('notas', e.target.value)} placeholder="Notas adicionales..." />
