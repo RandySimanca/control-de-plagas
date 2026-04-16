@@ -21,6 +21,7 @@ export default function PortalOrdenDetalle() {
   const [loading, setLoading] = useState(true)
   const [descargando, setDescargando] = useState(false)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [id])
 
   async function load() {
@@ -46,6 +47,7 @@ export default function PortalOrdenDetalle() {
       
       setActividades(actividadesRes.data || [])
     } catch (err) {
+      console.error(err)
       toast.error('No se pudo cargar el detalle de la orden')
       navigate('/portal')
     } finally {

@@ -13,6 +13,7 @@ export default function Certificados() {
 
   useEffect(() => { 
     if (profile || isAdmin) load() 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, isAdmin])
 
   async function load() {
