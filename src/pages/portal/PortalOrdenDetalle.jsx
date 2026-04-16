@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
+
 import { 
   ArrowLeft, Calendar, User, MapPin, Package, 
   FileText, Camera, Clock, History, MessageSquare, Download, CheckCircle2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { generarCertificado, abrirCertificado } from '../../lib/generarCertificado'
+import { abrirCertificado } from '../../lib/generarCertificado'
 
 export default function PortalOrdenDetalle() {
   const { id } = useParams()
@@ -56,7 +56,7 @@ export default function PortalOrdenDetalle() {
   async function descargarCertificado() {
     setDescargando(true)
     try {
-      const { data: config } = await supabase.from('configuracion').select('*').single()
+      const { data: config } = await supabase.from('configuracion').select('*').maybeSingle()
       await abrirCertificado({
         folio: certificado.folio,
         cliente: orden.clientes,

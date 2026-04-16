@@ -166,7 +166,7 @@ export default function OrdenDetalle() {
     setGenerando(true)
     try {
       const folio = `PC-${Date.now().toString(36).toUpperCase()}`
-      const { data: config } = await supabase.from('configuracion').select('*').single()
+      const { data: config } = await supabase.from('configuracion').select('*').maybeSingle()
       
       // Save cert record
       if (!certificado) {
@@ -252,7 +252,7 @@ export default function OrdenDetalle() {
   }
 
   async function descargarCertificado() {
-    const { data: config } = await supabase.from('configuracion').select('*').single()
+    const { data: config } = await supabase.from('configuracion').select('*').maybeSingle()
       await abrirCertificado({
         folio: certificado.folio,
         cliente: orden.clientes,

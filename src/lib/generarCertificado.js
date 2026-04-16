@@ -374,6 +374,6 @@ Podar el pasto en los alrededores de la locación ya que esto permite el refugio
  */
 export async function abrirCertificado(params) {
   const doc = await generarCertificado(params)
-  const blobUrl = doc.output('bloburl')
-  window.open(blobUrl, '_blank')
+  // Forzamos la descarga del archivo para evitar bloqueadores de popups en el navegador
+  doc.save(`Informe_Tecnico_${params.folio || 'Derosh'}.pdf`)
 }

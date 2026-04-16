@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { generarCertificado, abrirCertificado } from '../lib/generarCertificado'
+import { abrirCertificado } from '../lib/generarCertificado'
 import { FileCheck, Download, Search, Calendar } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
@@ -47,7 +47,7 @@ export default function Certificados() {
   async function descargar(cert) {
     try {
       const orden = cert.ordenes_servicio
-      const { data: config } = await supabase.from('configuracion').select('*').single()
+      const { data: config } = await supabase.from('configuracion').select('*').maybeSingle()
       
       // Load all data needed for a complete certificate (same as client/tech)
       const [actividadesRes, fotosRes] = await Promise.all([
