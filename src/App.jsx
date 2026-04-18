@@ -22,7 +22,7 @@ import Configuracion from './pages/admin/Configuracion'
 import DocumentosLegales from './pages/admin/DocumentosLegales'
 
 function AppRoutes() {
-  const { user, profile, loading } = useAuth()
+  const { user, profile } = useAuth()
 
   // Quitamos el return null global para que las páginas de login no se desmonten durante la carga del perfil
   // El estado de carga lo manejará cada ruta o componente que lo necesite

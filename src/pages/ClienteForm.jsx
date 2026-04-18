@@ -29,6 +29,7 @@ export default function ClienteForm() {
 
   useEffect(() => {
     if (isEdit) loadCliente()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   async function loadCliente() {

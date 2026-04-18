@@ -15,6 +15,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadDashboard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadDashboard() {
@@ -56,10 +57,10 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    { label: 'Clientes Activos', value: stats.clientes, icon: Users, color: 'bg-blue-100 text-blue-600', adminOnly: true },
-    { label: 'Órdenes Pendientes', value: stats.pendientes, icon: ClipboardList, color: 'bg-amber-100 text-amber-600' },
-    { label: 'Completadas', value: stats.completadas, icon: CheckCircle2, color: 'bg-green-100 text-green-600' },
-    { label: 'Técnicos Activos', value: stats.tecnicos, icon: UserCog, color: 'bg-purple-100 text-purple-600', adminOnly: true },
+    { label: 'Clientes Activos', value: stats.clientes, Icon: Users, color: 'bg-blue-100 text-blue-600', adminOnly: true },
+    { label: 'Órdenes Pendientes', value: stats.pendientes, Icon: ClipboardList, color: 'bg-amber-100 text-amber-600' },
+    { label: 'Completadas', value: stats.completadas, Icon: CheckCircle2, color: 'bg-green-100 text-green-600' },
+    { label: 'Técnicos Activos', value: stats.tecnicos, Icon: UserCog, color: 'bg-purple-100 text-purple-600', adminOnly: true },
   ].filter(card => isAdmin || !card.adminOnly)
 
   const estadoBadge = {
@@ -101,14 +102,14 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className={`grid grid-cols-2 ${isAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-4 mb-8`}>
-        {statCards.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="stat-card">
-            <div className={`stat-icon ${color}`}>
-              <Icon className="w-6 h-6" />
+        {statCards.map((card) => (
+          <div key={card.label} className="stat-card">
+            <div className={`stat-icon ${card.color}`}>
+              <card.Icon className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-dark-900">{value}</p>
-              <p className="text-xs text-dark-500">{label}</p>
+              <p className="text-2xl font-bold text-dark-900">{card.value}</p>
+              <p className="text-xs text-dark-500">{card.label}</p>
             </div>
           </div>
         ))}
