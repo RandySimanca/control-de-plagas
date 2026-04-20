@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS public.configuracion (
   id SERIAL PRIMARY KEY,
   empresa_id UUID NOT NULL DEFAULT public.get_my_empresa_id() REFERENCES public.empresas(id) ON DELETE CASCADE,
   nombre_empresa TEXT NOT NULL DEFAULT 'PlagControl',
+  nit TEXT,
   logo_url TEXT,
   email_contacto TEXT,
   telefono_contacto TEXT,

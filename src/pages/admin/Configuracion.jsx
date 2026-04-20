@@ -9,6 +9,7 @@ export default function Configuracion() {
   const [logo, setLogo] = useState(null)
   const [form, setForm] = useState({
     nombre_empresa: '',
+    nit: '',
     email_contacto: '',
     telefono_contacto: '',
     direccion_fiscal: '',
@@ -92,15 +93,29 @@ export default function Configuracion() {
               <Building2 className="w-5 h-5 text-primary-600" /> Información de la Empresa
             </h2>
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="label-field">Nombre de la Empresa</label>
-                <div className="relative">
-                  <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
-                  <input
-                    type="text" className="input-field pl-10"
-                    value={form.nombre_empresa}
-                    onChange={e => setForm(prev => ({ ...prev, nombre_empresa: e.target.value }))}
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="label-field">Nombre de la Empresa</label>
+                  <div className="relative">
+                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                    <input
+                      type="text" className="input-field pl-10"
+                      value={form.nombre_empresa || ''}
+                      onChange={e => setForm(prev => ({ ...prev, nombre_empresa: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="label-field">NIT de la Empresa</label>
+                  <div className="relative">
+                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                    <input
+                      type="text" className="input-field pl-10"
+                      value={form.nit || ''}
+                      onChange={e => setForm(prev => ({ ...prev, nit: e.target.value }))}
+                      placeholder="Ej: 900.123.456-7"
+                    />
+                  </div>
                 </div>
               </div>
 
