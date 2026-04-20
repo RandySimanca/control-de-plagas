@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, empresas(*)')
         .eq('id', userId)
         .single()
       if (error) throw error
@@ -61,9 +61,14 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }
 
+  const isSuperadmin = profile?.rol === 'superadmin'
   const isAdmin = profile?.rol === 'admin'
   const isTecnico = profile?.rol === 'tecnico'
   const isCliente = profile?.rol === 'cliente'
+  const empresa = profile?.empresas || null
+  const isLicenciaVencida = empresa?.estado_licencia === 'vencida' || empresa?.estado_licencia === 'suspendida'
+  const isLicenciaExpiradaPorFecha = empresa?.fecha_vencimiento && new Date(empresa.fecha_vencimiento) < new Date()
+  const licenseExpired = (isLicenciaVencida || isLicenciaExpiradaPorFecha) && !isSuperadmin
 
   return (
     <AuthContext.Provider value={{
@@ -72,9 +77,12 @@ export function AuthProvider({ children }) {
       loading,
       login,
       logout,
+      isSuperadmin,
       isAdmin,
       isTecnico,
       isCliente,
+      empresa,
+      licenseExpired,
     }}>
       {children}
     </AuthContext.Provider>

@@ -8,7 +8,7 @@ import {
 import toast from 'react-hot-toast'
 
 export default function Layout() {
-  const { profile, logout, isAdmin } = useAuth()
+  const { profile, logout, isAdmin, empresa } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -46,8 +46,12 @@ export default function Layout() {
       {/* Mobile Header */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30">
         <div className="flex items-center gap-2">
-          <Bug className="w-6 h-6 text-primary-600" />
-          <span className="font-bold text-lg text-dark-900">PlagControl</span>
+          {empresa?.logo_url ? (
+            <img src={empresa.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" />
+          ) : (
+            <Bug className="w-6 h-6 text-primary-600" />
+          )}
+          <span className="font-bold text-lg text-dark-900 truncate max-w-[150px]">{empresa?.nombre || 'PlagControl'}</span>
         </div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-dark-100">
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -68,12 +72,18 @@ export default function Layout() {
       `}>
         {/* Logo */}
         <div className="hidden md:flex items-center gap-3 px-6 py-5 border-b border-dark-100">
-          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-            <Bug className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-dark-900 leading-tight">PlagControl</h1>
-            <p className="text-xs text-dark-400">Gestión de Plagas</p>
+          {empresa?.logo_url ? (
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white border border-dark-100 p-1">
+              <img src={empresa.logo_url} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+              <Bug className="w-5 h-5 text-white" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="font-bold text-lg text-dark-900 leading-tight truncate">{empresa?.nombre || 'PlagControl'}</h1>
+            <p className="text-xs text-dark-400">Panel Operativo</p>
           </div>
         </div>
 

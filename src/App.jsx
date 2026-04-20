@@ -20,6 +20,8 @@ import PortalHistorial from './pages/portal/PortalHistorial'
 import PortalOrdenDetalle from './pages/portal/PortalOrdenDetalle'
 import Configuracion from './pages/admin/Configuracion'
 import DocumentosLegales from './pages/admin/DocumentosLegales'
+import DashboardSAAS from './pages/superadmin/DashboardSAAS'
+import EmpresaForm from './pages/superadmin/EmpresaForm'
 
 function AppRoutes() {
   const { user, profile } = useAuth()
@@ -44,6 +46,17 @@ function AppRoutes() {
           <PortalOrdenDetalle />
         </ProtectedRoute>
       } />
+
+      {/* Portal de Superadmin SaaS */}
+      <Route element={
+        <ProtectedRoute allowedRoles={['superadmin']}>
+          <Layout />
+        </ProtectedRoute>
+      }>
+        <Route path="/superadmin" element={<DashboardSAAS />} />
+        <Route path="/superadmin/empresas/nueva" element={<EmpresaForm />} />
+        <Route path="/superadmin/empresas/:id/editar" element={<EmpresaForm />} />
+      </Route>
 
       {/* App Principal */}
       <Route element={

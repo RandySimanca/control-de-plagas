@@ -49,13 +49,22 @@ export default function Configuracion() {
         logoUrl = qData.publicUrl
       }
 
-      const { error } = await supabase.from('configuracion').upsert({
-        id: 1,
+      const payload = {
         ...form,
         logo_url: logoUrl,
         updated_at: new Date().toISOString()
-      })
-      if (error) throw error
+      }
+      
+      let dbError;
+      if (form.id) {
+        const { error } = await supabase.from('configuracion').update(payload).eq('id', form.id)
+        dbError = error;
+      } else {
+        const { error } = await supabase.from('configuracion').insert(payload)
+        dbError = error;
+      }
+
+      if (dbError) throw dbError
       setForm(prev => ({ ...prev, logo_url: logoUrl }))
       toast.success('Configuración guardada')
     } catch (err) {
