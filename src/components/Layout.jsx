@@ -120,7 +120,7 @@ export default function Layout() {
           )}
           <div className="min-w-0">
             <h1 className="font-bold text-lg text-dark-900 leading-tight truncate">{isSuperadmin ? 'PlagControl' : (empresa?.nombre || 'PlagControl')}</h1>
-            <p className="text-xs text-dark-400">Panel Operativo</p>
+            <p className="text-xs text-dark-400">Panel Operativos</p>
           </div>
         </div>
 
