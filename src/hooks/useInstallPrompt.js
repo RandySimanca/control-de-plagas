@@ -11,7 +11,9 @@ import toast from 'react-hot-toast'
  */
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [canInstall, setCanInstall] = useState(true) // FORZADO para confirmar visualización en sidebar
+  const [canInstall, setCanInstall] = useState(
+    () => window.location.search.includes('pwa=debug') || sessionStorage.getItem('pwa-debug') === 'true'
+  )
   const [dismissed, setDismissed] = useState(false) 
 
   useEffect(() => {

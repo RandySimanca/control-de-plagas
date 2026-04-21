@@ -12,7 +12,7 @@ export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
-  const { canInstall, isReady, promptInstall, handleDismiss } = useInstallPrompt()
+  const { canInstall, isReady, promptInstall } = useInstallPrompt()
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Panel' },
@@ -45,40 +45,6 @@ export default function Layout() {
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-dark-50">
-      {/* PWA Install Banner - Rediseñado Estilo Premium */}
-      {canInstall && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-sm">
-          <div className="bg-slate-900 border border-slate-700/50 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-sm bg-slate-900/95 animate-in fade-in slide-in-from-top-4 duration-500">
-            {/* App Icon */}
-            <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 shrink-0 shadow-inner">
-              <img src="/icons/icon-192.png" alt="App Icon" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Text Info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold leading-tight truncate">Instalar PlagControl</p>
-              <p className="text-[11px] text-slate-400 truncate opacity-80">www.plagcontrol.vercel.app</p>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={promptInstall}
-                className="text-[13px] font-bold text-primary-400 hover:text-primary-300 px-3 py-1.5"
-              >
-                Instalar
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="p-1.5 text-slate-500 hover:text-white transition-colors"
-                aria-label="Cerrar"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Mobile Header */}
       <header className={`md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30`}>

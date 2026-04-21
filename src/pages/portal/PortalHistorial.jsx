@@ -5,7 +5,7 @@ import { generarCertificado as _generarCertificado, abrirCertificado } from '../
 import { useNavigate, Link } from 'react-router-dom'
 import {
   Bug, LogOut, ClipboardList, FileCheck, Calendar, Download,
-  CheckCircle2, Clock, Play, ChevronRight, FileText, X
+  CheckCircle2, Clock, Play, ChevronRight, FileText
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
@@ -13,7 +13,7 @@ import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 export default function PortalHistorial() {
   const { profile, logout, licenseWarning } = useAuth()
   const navigate = useNavigate()
-  const { canInstall, promptInstall, handleDismiss } = useInstallPrompt()
+  const { canInstall, promptInstall } = useInstallPrompt()
   const [ordenes, setOrdenes] = useState([])
   const [certificados, setCertificados] = useState([])
   const [documentos, setDocumentos] = useState([])
@@ -108,40 +108,6 @@ export default function PortalHistorial() {
 
   return (
     <div className="min-h-screen bg-dark-50">
-      {/* PWA Install Banner - Rediseñado Estilo Premium */}
-      {canInstall && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-sm">
-          <div className="bg-slate-900 border border-slate-700/50 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-sm bg-slate-900/95 animate-in fade-in slide-in-from-top-4 duration-500">
-            {/* App Icon */}
-            <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 shrink-0 shadow-inner">
-              <img src="/icons/icon-192.png" alt="App Icon" className="w-full h-full object-contain" />
-            </div>
-            
-            {/* Text Info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold leading-tight truncate">Instalar PlagControl</p>
-              <p className="text-[11px] text-slate-400 truncate opacity-80">www.plagcontrol.vercel.app</p>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={promptInstall}
-                className="text-[13px] font-bold text-primary-400 hover:text-primary-300 px-3 py-1.5"
-              >
-                Instalar
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="p-1.5 text-slate-500 hover:text-white transition-colors"
-                aria-label="Cerrar"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Header */}
       <header className="bg-white border-b border-dark-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
