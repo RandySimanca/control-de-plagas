@@ -9,9 +9,17 @@ import { useState, useEffect } from 'react'
  */
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [canInstall, setCanInstall] = useState(
-    () => window.location.search.includes('pwa=debug')
-  )
+  const [canInstall, setCanInstall] = useState(() => {
+    // Si ya activamos el modo debug o estamos en el link con ?pwa=debug
+    const isDebug = window.location.search.includes('pwa=debug') || 
+                    sessionStorage.getItem('pwa-debug') === 'true'
+    
+    if (isDebug) {
+      sessionStorage.setItem('pwa-debug', 'true')
+      return true
+    }
+    return false
+  })
   const [dismissed, setDismissed] = useState(false) // Desactivado temporalmente para pruebas
 
   useEffect(() => {
