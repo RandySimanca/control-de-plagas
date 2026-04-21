@@ -65,10 +65,11 @@ function AppRoutes() {
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
-        <Route path="clientes" element={<Clientes />} />
-        <Route path="clientes/nuevo" element={<ClienteForm />} />
-        <Route path="clientes/:id" element={<ClienteDetalle />} />
-        <Route path="clientes/:id/editar" element={<ClienteForm />} />
+        {/* Rutas de Clientes - Solo Admin */}
+        <Route path="clientes" element={<ProtectedRoute allowedRoles={['admin']}><Clientes /></ProtectedRoute>} />
+        <Route path="clientes/nuevo" element={<ProtectedRoute allowedRoles={['admin']}><ClienteForm /></ProtectedRoute>} />
+        <Route path="clientes/:id" element={<ProtectedRoute allowedRoles={['admin']}><ClienteDetalle /></ProtectedRoute>} />
+        <Route path="clientes/:id/editar" element={<ProtectedRoute allowedRoles={['admin']}><ClienteForm /></ProtectedRoute>} />
         <Route path="ordenes" element={<Ordenes />} />
         <Route path="ordenes/nueva" element={<OrdenForm />} />
         <Route path="ordenes/:id" element={<OrdenDetalle />} />

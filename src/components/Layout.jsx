@@ -19,7 +19,10 @@ export default function Layout() {
     { to: '/clientes', icon: Users, label: 'Clientes' },
     { to: '/ordenes', icon: ClipboardList, label: 'Órdenes' },
     { to: '/certificados', icon: FileCheck, label: 'Certificados' },
-  ]
+  ].filter(item => {
+    if (item.to === '/clientes' && profile?.rol === 'tecnico') return false
+    return true
+  })
 
   if (isAdmin) {
     navItems.push({ to: '/admin/usuarios', icon: UserCog, label: 'Usuarios' })
