@@ -121,6 +121,7 @@ export default function Layout() {
 
         {/* Nav Links */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto mt-14 md:mt-0">
+          {/* eslint-disable-next-line no-unused-vars */}
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}

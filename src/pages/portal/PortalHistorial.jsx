@@ -20,34 +20,35 @@ export default function PortalHistorial() {
   const [tab, setTab] = useState('historial')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { load() }, [profile])
-
-  async function load() {
-    if (!profile?.cliente_id) { setLoading(false); return }
-    try {
-      const [ordenesRes, certsRes, docsRes] = await Promise.all([
-        supabase.from('ordenes_servicio')
-          .select(`*, profiles(nombre_completo), productos_usados:productos_usados(*)`)
-          .eq('cliente_id', profile.cliente_id)
-          .order('fecha_programada', { ascending: false }),
-        supabase.from('certificados')
-          .select(`
-            *, 
-            ordenes_servicio!inner(*, profiles(nombre_completo), productos_usados:productos_usados(*))
-          `)
-          .eq('ordenes_servicio.cliente_id', profile.cliente_id)
-          .order('created_at', { ascending: false }),
-        supabase.from('documentos_legales').select('*').order('nombre', { ascending: true })
-      ])
-      setOrdenes(ordenesRes.data || [])
-      setCertificados(certsRes.data || [])
-      setDocumentos(docsRes.data || [])
-    } catch (err) {
-      console.error('Error:', err)
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    async function load() {
+      if (!profile?.cliente_id) { setLoading(false); return }
+      try {
+        const [ordenesRes, certsRes, docsRes] = await Promise.all([
+          supabase.from('ordenes_servicio')
+            .select(`*, profiles(nombre_completo), productos_usados:productos_usados(*)`)
+            .eq('cliente_id', profile.cliente_id)
+            .order('fecha_programada', { ascending: false }),
+          supabase.from('certificados')
+            .select(`
+              *, 
+              ordenes_servicio!inner(*, profiles(nombre_completo), productos_usados:productos_usados(*))
+            `)
+            .eq('ordenes_servicio.cliente_id', profile.cliente_id)
+            .order('created_at', { ascending: false }),
+          supabase.from('documentos_legales').select('*').order('nombre', { ascending: true })
+        ])
+        setOrdenes(ordenesRes.data || [])
+        setCertificados(certsRes.data || [])
+        setDocumentos(docsRes.data || [])
+      } catch (err) {
+        console.error('Error:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+    load()
+  }, [profile])
 
   async function descargarDoc(doc) {
     try {
@@ -67,7 +68,7 @@ export default function PortalHistorial() {
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (err) {
+    } catch {
       toast.error('Error al descargar documento')
     }
   }
