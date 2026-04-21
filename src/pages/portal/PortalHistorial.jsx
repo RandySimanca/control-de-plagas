@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { generarCertificado, abrirCertificado } from '../../lib/generarCertificado'
+import { generarCertificado as _generarCertificado, abrirCertificado } from '../../lib/generarCertificado'
 import { useNavigate, Link } from 'react-router-dom'
 import {
   Bug, LogOut, ClipboardList, FileCheck, Calendar, Download,
-  CheckCircle2, Clock, Play, ChevronRight, FileText
+  CheckCircle2, Clock, Play, ChevronRight, FileText, X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 
 export default function PortalHistorial() {
-  const { profile, logout } = useAuth()
+  const { profile, logout, licenseWarning } = useAuth()
   const navigate = useNavigate()
+  const { canInstall, promptInstall, handleDismiss } = useInstallPrompt()
   const [ordenes, setOrdenes] = useState([])
   const [certificados, setCertificados] = useState([])
   const [documentos, setDocumentos] = useState([])
@@ -105,6 +107,26 @@ export default function PortalHistorial() {
 
   return (
     <div className="min-h-screen bg-dark-50">
+      {/* PWA Install Banner */}
+      {canInstall && (
+        <div className="bg-primary-600 text-white px-4 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Download className="w-4 h-4 shrink-0" />
+            <span className="font-medium">¡Instala PlagControl como app!</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={promptInstall}
+              className="bg-white text-primary-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors"
+            >
+              Instalar
+            </button>
+            <button onClick={handleDismiss} className="text-primary-100 hover:text-white p-1 rounded-lg hover:bg-primary-700 transition-colors" aria-label="Cerrar">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-white border-b border-dark-200 px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -120,6 +142,20 @@ export default function PortalHistorial() {
           </div>
         </div>
       </header>
+      {/* Aviso licencia vencida */}
+      {licenseWarning && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+          <div className="max-w-4xl mx-auto flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Licencia de tu empresa vencida</p>
+              <p className="text-xs text-amber-700 mt-0.5">Puedes solicitar servicios, pero el procesamiento está pausado hasta que la licencia sea renovada. Comunícate con tu proveedor para más información.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="page-title mb-1">¡Hola, {profile?.nombre_completo?.split(' ')[0]}!</h1>

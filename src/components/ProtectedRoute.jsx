@@ -24,8 +24,8 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/" replace />
   }
 
-  // Suspender acceso si la licencia del tenant expiró (Superadmin ya lo ignora en AuthContext)
-  if (licenseExpired) {
+  // Suspender acceso si la licencia del tenant expiró (Superadmin y clientes lo ignoran)
+  if (licenseExpired && profile?.rol !== 'cliente') {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-center z-50 fixed inset-0">
         <div className="bg-slate-800 p-8 rounded-xl max-w-md w-full border border-slate-700 shadow-2xl">

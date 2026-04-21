@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
       isCliente,
       empresa,
       licenseExpired,
+      licenseWarning: (isLicenciaVencida || isLicenciaExpiradaPorFecha) && isCliente,
     }}>
       {children}
     </AuthContext.Provider>

@@ -3,14 +3,16 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard, Users, ClipboardList, FileCheck, UserCog,
-  Menu, X, LogOut, Shield, Bug
+  Menu, X, LogOut, Shield, Bug, Download
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useInstallPrompt } from '../hooks/useInstallPrompt'
 
 export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
+  const { canInstall, promptInstall, handleDismiss } = useInstallPrompt()
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Panel' },
@@ -43,8 +45,37 @@ export default function Layout() {
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-dark-50">
+      {/* PWA Install Banner */}
+      {canInstall && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-primary-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2 text-sm">
+            <Download className="w-4 h-4 shrink-0" />
+            <span className="font-medium">¡Instala PlagControl como app!</span>
+            <span className="hidden sm:inline text-primary-100">Accede más rápido desde tu dispositivo.</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={promptInstall}
+              className="bg-white text-primary-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors"
+            >
+              Instalar
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="text-primary-100 hover:text-white p-1 rounded-lg hover:bg-primary-700 transition-colors"
+              aria-label="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Offset for banner */}
+      {canInstall && <div className="h-[42px] md:hidden" />}
+
       {/* Mobile Header */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30">
+      <header className={`md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30 ${canInstall ? 'mt-[42px]' : ''}`}>
         <div className="flex items-center gap-2">
           {(!isSuperadmin && empresa?.logo_url) ? (
             <img src={empresa.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" />
@@ -69,6 +100,7 @@ export default function Layout() {
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         flex flex-col
+        ${canInstall ? 'md:pt-[42px]' : ''}
       `}>
         {/* Logo */}
         <div className="hidden md:flex items-center gap-3 px-6 py-5 border-b border-dark-100">
