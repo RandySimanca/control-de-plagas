@@ -12,7 +12,7 @@ export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
-  const { canInstall, promptInstall, handleDismiss } = useInstallPrompt()
+  const { canInstall, isReady, promptInstall, handleDismiss } = useInstallPrompt()
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Panel' },
@@ -141,21 +141,28 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Botón de Instalación (Movido arriba para visibilidad total) */}
-        <div className="px-4 py-2">
           {canInstall && (
             <button 
               onClick={promptInstall}
-              className="flex items-center gap-2 w-full justify-start text-sm bg-primary-600 text-white hover:bg-primary-700 px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-primary-600/20 transition-all duration-200 mb-2"
+              className={`flex items-center gap-2 w-full justify-start text-sm px-4 py-2.5 rounded-xl font-semibold shadow-md transition-all duration-200 mb-2 ${
+                isReady 
+                ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-600/20' 
+                : 'bg-dark-200 text-dark-500 cursor-not-allowed opacity-80'
+              }`}
             >
-              <Download className="w-5 h-5 shrink-0" /> Instalar Aplicación
+              <Download className="w-5 h-5 shrink-0" /> 
+              <span>{isReady ? 'Instalar Aplicación' : 'Preparando Instalación...'}</span>
             </button>
           )}
-          {/* Debug Indicator - Solo para confirmar que el componente recibe el estado */}
+          {/* Debug Indicator */}
           {window.location.hostname !== 'localhost' && (
-            <p className="text-[9px] text-dark-300 px-1">PWA Status: {canInstall ? 'Visible' : 'Hidden'}</p>
+            <div className="flex items-center gap-1.5 px-1">
+              <div className={`w-2 h-2 rounded-full ${isReady ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+              <p className="text-[9px] text-dark-400 font-medium">
+                PWA: {isReady ? 'Listo para instalar' : 'Esperando navegador...'}
+              </p>
+            </div>
           )}
-        </div>
 
         {/* User */}
         <div className="p-4 border-t border-dark-100">
