@@ -9,7 +9,9 @@ import { useState, useEffect } from 'react'
  */
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [canInstall, setCanInstall] = useState(false)
+  const [canInstall, setCanInstall] = useState(
+    () => window.location.search.includes('pwa=debug')
+  )
   const [dismissed, setDismissed] = useState(false) // Desactivado temporalmente para pruebas
 
   useEffect(() => {
