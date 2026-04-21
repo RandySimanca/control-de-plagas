@@ -152,6 +152,15 @@ export default function Layout() {
               <p className="text-xs text-dark-400 capitalize">{profile?.rol}</p>
             </div>
           </div>
+          {canInstall && (
+            <button 
+              onClick={promptInstall}
+              className="btn-ghost w-full justify-start text-sm text-primary-600 hover:bg-primary-50 mb-2 border border-primary-100"
+            >
+              <Download className="w-4 h-4" /> Instalar Aplicación
+            </button>
+          )}
+
           <button onClick={handleLogout} className="btn-ghost w-full justify-start text-sm text-red-600 hover:bg-red-50">
             <LogOut className="w-4 h-4" /> Cerrar sesión
           </button>

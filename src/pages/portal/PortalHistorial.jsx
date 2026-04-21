@@ -150,6 +150,14 @@ export default function PortalHistorial() {
             <span className="font-bold text-dark-900">Portal de Clientes</span>
           </div>
           <div className="flex items-center gap-3">
+            {canInstall && (
+              <button 
+                onClick={promptInstall}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors border border-primary-200"
+              >
+                <Download className="w-3.5 h-3.5" /> Instalar App
+              </button>
+            )}
             <span className="text-sm text-dark-500 hidden sm:block">{profile?.nombre_completo}</span>
             <button onClick={handleLogout} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
               <LogOut className="w-5 h-5" />
