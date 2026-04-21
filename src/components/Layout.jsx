@@ -45,37 +45,43 @@ export default function Layout() {
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-dark-50">
-      {/* PWA Install Banner */}
+      {/* PWA Install Banner - Rediseñado Estilo Premium */}
       {canInstall && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-primary-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-2 text-sm">
-            <Download className="w-4 h-4 shrink-0" />
-            <span className="font-medium">¡Instala PlagControl como app!</span>
-            <span className="hidden sm:inline text-primary-100">Accede más rápido desde tu dispositivo.</span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={promptInstall}
-              className="bg-white text-primary-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors"
-            >
-              Instalar
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="text-primary-100 hover:text-white p-1 rounded-lg hover:bg-primary-700 transition-colors"
-              aria-label="Cerrar"
-            >
-              <X className="w-4 h-4" />
-            </button>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-sm">
+          <div className="bg-slate-900 border border-slate-700/50 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-sm bg-slate-900/95 animate-in fade-in slide-in-from-top-4 duration-500">
+            {/* App Icon */}
+            <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 shrink-0 shadow-inner">
+              <img src="/icons/icon-192.png" alt="App Icon" className="w-full h-full object-contain" />
+            </div>
+            
+            {/* Text Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold leading-tight truncate">Instalar PlagControl</p>
+              <p className="text-[11px] text-slate-400 truncate opacity-80">www.plagcontrol.vercel.app</p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={promptInstall}
+                className="text-[13px] font-bold text-primary-400 hover:text-primary-300 px-3 py-1.5"
+              >
+                Instalar
+              </button>
+              <button
+                onClick={handleDismiss}
+                className="p-1.5 text-slate-500 hover:text-white transition-colors"
+                aria-label="Cerrar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Offset for banner */}
-      {canInstall && <div className="h-[42px] md:hidden" />}
-
       {/* Mobile Header */}
-      <header className={`md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30 ${canInstall ? 'mt-[42px]' : ''}`}>
+      <header className={`md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30`}>
         <div className="flex items-center gap-2">
           {(!isSuperadmin && empresa?.logo_url) ? (
             <img src={empresa.logo_url} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" />
@@ -100,7 +106,6 @@ export default function Layout() {
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         flex flex-col
-        ${canInstall ? 'md:pt-[42px]' : ''}
       `}>
         {/* Logo */}
         <div className="hidden md:flex items-center gap-3 px-6 py-5 border-b border-dark-100">

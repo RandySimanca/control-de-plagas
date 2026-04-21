@@ -16,15 +16,18 @@ export function useInstallPrompt() {
 
   useEffect(() => {
     const handler = (e) => {
+      console.log('PWA: beforeinstallprompt event fired')
       e.preventDefault()
       setDeferredPrompt(e)
       setCanInstall(true)
     }
 
+    console.log('PWA: Listening for beforeinstallprompt...')
     window.addEventListener('beforeinstallprompt', handler)
 
     // Si ya está instalada como PWA, no mostramos nada
     window.addEventListener('appinstalled', () => {
+      console.log('PWA: App installed event fired')
       setCanInstall(false)
       setDeferredPrompt(null)
     })
