@@ -10,9 +10,7 @@ import { useState, useEffect } from 'react'
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [canInstall, setCanInstall] = useState(false)
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem('pwa-install-dismissed') === 'true'
-  )
+  const [dismissed, setDismissed] = useState(false) // Desactivado temporalmente para pruebas
 
   useEffect(() => {
     const handler = (e) => {
