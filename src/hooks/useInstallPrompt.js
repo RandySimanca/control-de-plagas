@@ -9,25 +9,15 @@ import { useState, useEffect } from 'react'
  */
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [canInstall, setCanInstall] = useState(() => {
-    // Si ya activamos el modo debug o estamos en el link con ?pwa=debug
-    const isDebug = window.location.search.includes('pwa=debug') || 
-                    sessionStorage.getItem('pwa-debug') === 'true'
-    
-    if (isDebug) {
-      sessionStorage.setItem('pwa-debug', 'true')
-      return true
-    }
-    return false
-  })
-  const [dismissed, setDismissed] = useState(false) // Desactivado temporalmente para pruebas
+  const [canInstall, setCanInstall] = useState(true) // FORZADO para confirmar visualización en sidebar
+  const [dismissed, setDismissed] = useState(false) 
 
   useEffect(() => {
     const handler = (e) => {
       console.log('PWA: beforeinstallprompt event fired')
       e.preventDefault()
       setDeferredPrompt(e)
-      setCanInstall(true)
+      // setCanInstall(true) // Ya está forzado
     }
 
     console.log('PWA: Listening for beforeinstallprompt...')

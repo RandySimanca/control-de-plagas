@@ -15,9 +15,12 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
+        id: '/',
         name: 'PlagControl',
         short_name: 'PlagControl',
         description: 'Sistema de Gestión de Control de Plagas',
+        lang: 'es-ES',
+        categories: ['business', 'productivity'],
         theme_color: '#059669',
         background_color: '#f8fafc',
         display: 'standalone',

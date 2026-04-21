@@ -120,7 +120,7 @@ export default function Layout() {
           )}
           <div className="min-w-0">
             <h1 className="font-bold text-lg text-dark-900 leading-tight truncate">{isSuperadmin ? 'PlagControl' : (empresa?.nombre || 'PlagControl')}</h1>
-            <p className="text-xs text-dark-400">Panel Operativos</p>
+            <p className="text-xs text-dark-400">Panel Operativo</p>
           </div>
         </div>
 
@@ -141,6 +141,22 @@ export default function Layout() {
           ))}
         </nav>
 
+        {/* Botón de Instalación (Movido arriba para visibilidad total) */}
+        <div className="px-4 py-2">
+          {canInstall && (
+            <button 
+              onClick={promptInstall}
+              className="flex items-center gap-2 w-full justify-start text-sm bg-primary-600 text-white hover:bg-primary-700 px-4 py-2.5 rounded-xl font-semibold shadow-md shadow-primary-600/20 transition-all duration-200 mb-2"
+            >
+              <Download className="w-5 h-5 shrink-0" /> Instalar Aplicación
+            </button>
+          )}
+          {/* Debug Indicator - Solo para confirmar que el componente recibe el estado */}
+          {window.location.hostname !== 'localhost' && (
+            <p className="text-[9px] text-dark-300 px-1">PWA Status: {canInstall ? 'Visible' : 'Hidden'}</p>
+          )}
+        </div>
+
         {/* User */}
         <div className="p-4 border-t border-dark-100">
           <div className="flex items-center gap-3 mb-3">
@@ -152,15 +168,6 @@ export default function Layout() {
               <p className="text-xs text-dark-400 capitalize">{profile?.rol}</p>
             </div>
           </div>
-          {canInstall && (
-            <button 
-              onClick={promptInstall}
-              className="flex items-center gap-2 w-full justify-start text-sm bg-primary-600 text-white hover:bg-primary-700 px-4 py-2.5 rounded-xl font-semibold mb-3 shadow-sm shadow-primary-600/20 transition-all duration-200"
-            >
-              <Download className="w-4 h-4 shrink-0" /> Instalar Aplicación
-            </button>
-          )}
-
           <button onClick={handleLogout} className="btn-ghost w-full justify-start text-sm text-red-600 hover:bg-red-50">
             <LogOut className="w-4 h-4" /> Cerrar sesión
           </button>
