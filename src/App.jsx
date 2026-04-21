@@ -22,6 +22,8 @@ import Configuracion from './pages/admin/Configuracion'
 import DocumentosLegales from './pages/admin/DocumentosLegales'
 import DashboardSAAS from './pages/superadmin/DashboardSAAS'
 import EmpresaForm from './pages/superadmin/EmpresaForm'
+import PortalSolicitudForm from './pages/portal/PortalSolicitudForm'
+import Solicitudes from './pages/admin/Solicitudes'
 
 function AppRoutes() {
   const { user, profile } = useAuth()
@@ -44,6 +46,11 @@ function AppRoutes() {
       <Route path="/portal/ordenes/:id" element={
         <ProtectedRoute allowedRoles={['cliente']}>
           <PortalOrdenDetalle />
+        </ProtectedRoute>
+      } />
+      <Route path="/portal/solicitudes/nueva" element={
+        <ProtectedRoute allowedRoles={['cliente']}>
+          <PortalSolicitudForm />
         </ProtectedRoute>
       } />
 
@@ -94,6 +101,9 @@ function AppRoutes() {
         } />
         <Route path="admin/documentos" element={
           <ProtectedRoute allowedRoles={['admin']}><DocumentosLegales /></ProtectedRoute>
+        } />
+        <Route path="admin/solicitudes" element={
+          <ProtectedRoute allowedRoles={['admin']}><Solicitudes /></ProtectedRoute>
         } />
       </Route>
 

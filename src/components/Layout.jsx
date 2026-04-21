@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard, Users, ClipboardList, FileCheck, UserCog,
-  Menu, X, LogOut, Shield, Bug, Download
+  Menu, X, LogOut, Shield, Bug, Download, ClipboardCheck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
+import { supabase } from '../lib/supabase'
 
 export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const { canInstall, isReady, promptInstall } = useInstallPrompt()
+  const [requestCount, setRequestCount] = useState(0)
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Panel' },
@@ -27,7 +29,34 @@ export default function Layout() {
   if (isAdmin) {
     navItems.push({ to: '/admin/usuarios', icon: UserCog, label: 'Usuarios' })
     navItems.push({ to: '/admin/configuracion', icon: Shield, label: 'Configuración' })
+    navItems.push({ to: '/admin/solicitudes', icon: ClipboardCheck, label: 'Solicitudes', badge: requestCount })
   }
+
+  async function loadRequestCount() {
+    try {
+      const { count } = await supabase
+        .from('solicitudes_servicio')
+        .select('id', { count: 'exact', head: true })
+        .in('estado', ['pendiente', 'aceptada'])
+      
+      setRequestCount(count || 0)
+    } catch {
+      console.error('Error cargando solicitudes')
+      toast.error('No se pudieron cargar las solicitudes')
+    }
+  }
+
+  useEffect(() => {
+    if (isAdmin) {
+      const initLoad = async () => {
+        await loadRequestCount()
+      }
+      initLoad()
+      
+      const interval = setInterval(loadRequestCount, 30000) // Cada 30 seg
+      return () => clearInterval(interval)
+    }
+  }, [isAdmin])
 
   async function handleLogout() {
     try {
@@ -40,7 +69,7 @@ export default function Layout() {
   }
 
   const linkClasses = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
+    `flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
       isActive
         ? 'bg-primary-600 text-white shadow-md shadow-primary-600/25'
         : 'text-dark-600 hover:bg-dark-100 hover:text-dark-900'
@@ -95,17 +124,23 @@ export default function Layout() {
 
         {/* Nav Links */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto mt-14 md:mt-0">
-          {/* eslint-disable-next-line no-unused-vars */}
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.map((item) => (
             <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
               className={linkClasses}
               onClick={() => setSidebarOpen(false)}
             >
-              <Icon className="w-5 h-5 shrink-0" />
-              {label}
+              <div className="flex items-center gap-3">
+                <item.icon className="w-5 h-5 shrink-0" />
+                <span>{item.label}</span>
+              </div>
+              {item.badge > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {item.badge}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

@@ -1,28 +1,32 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { ArrowLeft, Save, Loader2, Plus, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function OrdenForm() {
-  const { id } = useParams()
+   const { id } = useParams()
   const [searchParams] = useSearchParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const { profile } = useAuth()
   const isEdit = Boolean(id)
+  
+  const prefill = location.state?.prefill || {}
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [clientes, setClientes] = useState([])
   const [tecnicos, setTecnicos] = useState([])
   const [form, setForm] = useState({
-    cliente_id: searchParams.get('cliente') || '',
+    cliente_id: prefill.cliente_id || searchParams.get('cliente') || '',
     tecnico_id: profile?.id || '',
-    fecha_programada: new Date().toISOString().split('T')[0],
-    tipo_plaga: '',
-    observaciones: '',
+    fecha_programada: prefill.fecha_programada || new Date().toISOString().split('T')[0],
+    tipo_plaga: prefill.tipo_plaga || '',
+    observaciones: prefill.observaciones || '',
     estado: 'programada',
+    solicitud_id: prefill.solicitud_id || null
   })
   const [productos, setProductos] = useState([{ tipo_producto: '', nombre_comercial: '', ingrediente_activo: '', cantidad: '' }])
   const [estaciones, setEstaciones] = useState([{ tipo_estacion: '', cantidad: '' }])
@@ -116,6 +120,18 @@ export default function OrdenForm() {
         await supabase.from('estaciones_usadas').delete().eq('orden_id', ordenId)
       }
 
+
+      // Si viene de una solicitud, actualizar el estado de la misma
+      if (!isEdit && form.solicitud_id) {
+        await supabase
+          .from('solicitudes_servicio')
+          .update({ 
+            estado: 'convertida', 
+            orden_id: ordenId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', form.solicitud_id)
+      }
 
       toast.success(isEdit ? 'Orden actualizada' : 'Orden creada')
       navigate(`/ordenes/${ordenId}`)
