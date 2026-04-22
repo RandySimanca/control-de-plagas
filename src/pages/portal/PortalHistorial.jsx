@@ -28,7 +28,7 @@ export default function PortalHistorial() {
       try {
         const [ordenesRes, certRes, docsRes, solRes] = await Promise.all([
           supabase.from('ordenes_servicio').select('*, profiles(nombre_completo)').eq('cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
-          supabase.from('certificados_servicio').select(`*, ordenes_servicio!inner(*)`).eq('ordenes_servicio.cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
+          supabase.from('certificados').select(`*, ordenes_servicio!inner(*)`).eq('ordenes_servicio.cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
           supabase.from('documentos_clientes').select('*').eq('cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
           supabase.from('solicitudes_servicio').select('*').eq('cliente_id', profile.cliente_id).order('created_at', { ascending: false })
         ])
