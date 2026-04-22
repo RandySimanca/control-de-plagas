@@ -21,8 +21,10 @@ export default function PortalSolicitudForm() {
     if (!formData.descripcion.trim()) {
       return toast.error('Por favor describe lo que necesitas')
     }
+    if (!profile?.cliente_id || !profile?.empresa_id) {
+      return toast.error('Error de sesión: recarga la página e inicia sesión de nuevo')
+    }
 
-    setLoading(false) // Reset loading for safety
     setLoading(true)
 
     try {
