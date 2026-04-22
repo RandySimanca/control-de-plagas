@@ -30,7 +30,7 @@ export default function PortalHistorial() {
         const [ordenesRes, certRes, docsRes, solRes] = await Promise.all([
           supabase.from('ordenes_servicio').select('*, profiles(nombre_completo)').eq('cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
           supabase.from('certificados').select(`*, ordenes_servicio!inner(*)`).eq('ordenes_servicio.cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
-          supabase.from('documentos_clientes').select('*').eq('cliente_id', profile.cliente_id).order('created_at', { ascending: false }),
+          supabase.from('documentos_legales').select('*').order('created_at', { ascending: false }),
           supabase.from('solicitudes_servicio').select('*').eq('cliente_id', profile.cliente_id).order('created_at', { ascending: false })
         ])
 
@@ -239,7 +239,7 @@ export default function PortalHistorial() {
             {tab === 'documentos' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {documentos.map(doc => (
-                  <a key={doc.id} href={doc.archivo_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl border border-dark-100 hover:bg-primary-50 transition-all">
+                  <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl border border-dark-100 hover:bg-primary-50 transition-all">
                     <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center text-primary-600"><FileText className="w-6 h-6" /></div>
                     <div>
                       <p className="font-bold text-dark-900">{doc.nombre}</p>
