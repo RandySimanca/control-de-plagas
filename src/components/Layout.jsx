@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard, Users, ClipboardList, FileCheck, UserCog,
@@ -13,8 +13,17 @@ export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const { canInstall, isReady, promptInstall } = useInstallPrompt()
   const [requestCount, setRequestCount] = useState(0)
+
+  // Actualizar última vez visto cuando entra a la página
+  useEffect(() => {
+    if (location.pathname === '/admin/solicitudes') {
+      localStorage.setItem('admin_last_viewed_solicitudes', new Date().toISOString())
+      setRequestCount(0)
+    }
+  }, [location.pathname])
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Panel' },
@@ -33,12 +42,24 @@ export default function Layout() {
   }
 
   async function loadRequestCount() {
+    // Si estamos en la página, no mostramos el badge
+    if (location.pathname === '/admin/solicitudes') {
+      setRequestCount(0)
+      return
+    }
+
     try {
-      const { count } = await supabase
+      let query = supabase
         .from('solicitudes_servicio')
         .select('id', { count: 'exact', head: true })
         .in('estado', ['pendiente', 'aceptada'])
       
+      const lastViewed = localStorage.getItem('admin_last_viewed_solicitudes')
+      if (lastViewed) {
+        query = query.gt('updated_at', lastViewed)
+      }
+
+      const { count } = await query
       setRequestCount(count || 0)
     } catch {
       console.error('Error cargando solicitudes')
