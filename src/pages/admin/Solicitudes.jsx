@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { 
   ClipboardList, Search, Filter, Calendar, Clock, 
-  CheckCircle2, XCircle, Send, Plus, ArrowRight, User
+  CheckCircle2, XCircle, Send, Plus, ArrowRight, User, Trash2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -83,6 +83,20 @@ export default function Solicitudes() {
       loadSolicitudes()
     } catch {
       toast.error('Error al enviar cotización')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('¿Estás seguro de eliminar esta solicitud? Ya no aparecerá en el portal.')) return
+    
+    try {
+      const { error } = await supabase.from('solicitudes_servicio').delete().eq('id', id)
+      if (error) throw error
+      toast.success('Solicitud eliminada')
+      setSelectedSol(null)
+      loadSolicitudes()
+    } catch {
+      toast.error('Error al eliminar la solicitud')
     }
   }
 
@@ -213,12 +227,21 @@ export default function Solicitudes() {
                   <p className="text-xs text-dark-500">ID: {selectedSol.id.split('-')[0]}</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedSol(null)}
-                className="p-2 hover:bg-dark-50 rounded-xl transition-colors"
-              >
-                <XCircle className="w-6 h-6 text-dark-300" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handleDelete(selectedSol.id)}
+                  className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-500 tooltip-trigger"
+                  title="Eliminar Solicitud"
+                >
+                  <Trash2 className="w-6 h-6" />
+                </button>
+                <button 
+                  onClick={() => setSelectedSol(null)}
+                  className="p-2 hover:bg-dark-50 rounded-xl transition-colors"
+                >
+                  <XCircle className="w-6 h-6 text-dark-300" />
+                </button>
+              </div>
             </div>
 
             <div className="p-6 space-y-6 overflow-y-auto">

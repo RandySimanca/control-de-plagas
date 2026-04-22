@@ -5,7 +5,7 @@ import { generarCertificado as _generarCertificado, abrirCertificado } from '../
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   Bug, LogOut, ClipboardList, FileCheck, Calendar, Download,
-  CheckCircle2, Clock, Play, ChevronRight, FileText, PlusCircle, Bell
+  CheckCircle2, Clock, Play, ChevronRight, FileText, PlusCircle, Bell, Trash2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
@@ -59,6 +59,19 @@ export default function PortalHistorial() {
       toast.success('Respuesta enviada')
       window.location.reload()
     } catch { toast.error('Error al actualizar') }
+  }
+
+  async function handleDeleteSolicitud(id) {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta solicitud? Ya no aparecerá en tu historial.')) return
+    
+    try {
+      const { error } = await supabase.from('solicitudes_servicio').delete().eq('id', id)
+      if (error) throw error
+      toast.success('Solicitud eliminada correctamente')
+      setSolicitudes(solicitudes.filter(s => s.id !== id))
+    } catch {
+      toast.error('No se pudo eliminar la solicitud')
+    }
   }
 
   async function marcarLeida(sol) {
@@ -268,12 +281,19 @@ export default function PortalHistorial() {
                         </div>
                       </div>
 
-                      {sol.estado === 'convertida' && sol.orden_id && (
+                      {sol.estado === 'convertida' && sol.orden_id ? (
                         <button 
                           onClick={() => navigate(`/portal/ordenes/${sol.orden_id}`)}
                           className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1"
                         >
                           Ver Orden <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleDeleteSolicitud(sol.id)}
+                          className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1 text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Eliminar
                         </button>
                       )}
                     </div>
