@@ -24,20 +24,16 @@ export default function Solicitudes() {
   })
 
   useEffect(() => {
-    loadSolicitudes()
+    if (profile?.empresa_id) loadSolicitudes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter])
+  }, [filter, profile])
 
   async function loadSolicitudes() {
     try {
       setLoading(true)
       let query = supabase
         .from('solicitudes_servicio')
-        .select(`
-          *,
-          clientes(nombre, direccion, telefono)
-        `)
-        .eq('empresa_id', profile.empresa_id)
+        .select('*, clientes(nombre, direccion, telefono)')
         .order('created_at', { ascending: false })
 
       if (filter !== 'todas') {
@@ -49,10 +45,13 @@ export default function Solicitudes() {
       }
 
       const { data, error } = await query
-      if (error) throw error
+      if (error) {
+        console.error('Error detallado:', JSON.stringify(error))
+        throw error
+      }
       setSolicitudes(data || [])
-    } catch {
-      console.error('Error cargando solicitudes')
+    } catch (err) {
+      console.error('Error cargando solicitudes:', err)
       toast.error('No se pudieron cargar las solicitudes')
     } finally {
       setLoading(false)
