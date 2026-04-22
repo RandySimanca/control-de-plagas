@@ -7,6 +7,7 @@ import {
   CheckCircle2, XCircle, Send, Plus, ArrowRight, User, Trash2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { confirmDelete, successAlert } from '../../lib/alerts'
 
 export default function Solicitudes() {
   const { profile } = useAuth()
@@ -77,7 +78,7 @@ export default function Solicitudes() {
         .eq('id', selectedSol.id)
 
       if (error) throw error
-      toast.success('Cotización enviada al cliente')
+      await successAlert('¡Enviada!', 'Cotización enviada al cliente')
       setCotizando(false)
       setSelectedSol(null)
       loadSolicitudes()
@@ -87,12 +88,13 @@ export default function Solicitudes() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('¿Estás seguro de eliminar esta solicitud? Ya no aparecerá en el portal.')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar esta solicitud?', 'Ya no aparecerá en el portal ni en este panel.')
+    if (!isConfirmed) return
     
     try {
       const { error } = await supabase.from('solicitudes_servicio').delete().eq('id', id)
       if (error) throw error
-      toast.success('Solicitud eliminada')
+      await successAlert('¡Eliminada!', 'Solicitud eliminada')
       setSelectedSol(null)
       loadSolicitudes()
     } catch {

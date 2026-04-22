@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { FileText, Upload, Trash2, FilePlus, Loader2, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { confirmDelete, successAlert } from '../../lib/alerts'
 
 export default function DocumentosLegales() {
   const [documentos, setDocumentos] = useState([])
@@ -57,7 +58,7 @@ export default function DocumentosLegales() {
 
       if (dbError) throw dbError
 
-      toast.success('Documento subido con éxito')
+      await successAlert('¡Subido!', 'Documento subido con éxito')
       setNombre('')
       setArchivo(null)
       e.target.reset()
@@ -93,7 +94,8 @@ export default function DocumentosLegales() {
   }
 
   async function handleDelete(doc) {
-    if (!confirm('¿Estás seguro de eliminar este documento?')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar este documento?', 'El archivo ya no estará disponible para visualización.')
+    if (!isConfirmed) return
 
     try {
       // 1. Delete from storage
@@ -102,7 +104,7 @@ export default function DocumentosLegales() {
       await supabase.from('documentos_legales').delete().eq('id', doc.id)
       
       setDocumentos(documentos.filter(d => d.id !== doc.id))
-      toast.success('Documento eliminado')
+      await successAlert('Eliminado', 'El documento legal ha sido eliminado.')
     } catch (err) {
       toast.error('Error al eliminar')
     }

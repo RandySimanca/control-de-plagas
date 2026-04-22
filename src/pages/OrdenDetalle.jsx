@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import logoDerosh from '../assets/logo Derosh.png'
+import { confirmDelete, successAlert } from '../lib/alerts'
 
 const OPCIONES_AREAS = [
   "Áreas Administrativas y Oficinas",
@@ -129,11 +130,12 @@ export default function OrdenDetalle() {
   }
 
   async function handleDeleteOrden() {
-    if (!confirm('¿Estás seguro de eliminar esta orden? Se borrarán también todas las actividades, fotos y el certificado asociado.')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar esta orden?', 'Se borrarán también todas las actividades, fotos y el certificado asociado.')
+    if (!isConfirmed) return
     try {
       const { error } = await supabase.from('ordenes_servicio').delete().eq('id', id)
       if (error) throw error
-      toast.success('Orden eliminada exitosamente')
+      await successAlert('¡Eliminada!', 'Orden eliminada exitosamente')
       navigate('/ordenes')
     } catch (err) {
       toast.error('Error al eliminar: ' + err.message)
@@ -335,19 +337,21 @@ export default function OrdenDetalle() {
   }
 
   async function handleDeleteActivity(actId) {
-    if (!confirm('¿Estás seguro de eliminar esta nota de la bitácora?')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar esta nota?', 'Se borrará la entrada de la bitácora.')
+    if (!isConfirmed) return
     try {
       const { error } = await supabase.from('actividades_servicio').delete().eq('id', actId)
       if (error) throw error
       setActividades(actividades.filter(a => a.id !== actId))
-      toast.success('Nota eliminada')
+      await successAlert('¡Eliminada!', 'Nota eliminada')
     } catch (err) {
       toast.error('Error al eliminar nota: ' + err.message)
     }
   }
 
   async function handleDeletePhoto(foto) {
-    if (!confirm('¿Estás seguro de eliminar esta fotografía?')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar esta fotografía?', 'No se podrá recuperar la imagen.')
+    if (!isConfirmed) return
     try {
       // 1. Delete from bucket
       if (foto.storage_path) {
@@ -359,7 +363,7 @@ export default function OrdenDetalle() {
       if (error) throw error
 
       setFotos(fotos.filter(f => f.id !== foto.id))
-      toast.success('Fotografía eliminada')
+      await successAlert('¡Eliminada!', 'Fotografía eliminada')
     } catch (err) {
       toast.error('Error al eliminar foto: ' + err.message)
     }

@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { ArrowLeft, Save, Loader2, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { confirmDelete, successAlert } from '../../lib/alerts'
 
 export default function UsuarioForm() {
   const { id } = useParams()
@@ -72,7 +73,7 @@ export default function UsuarioForm() {
           updated_at: new Date().toISOString()
         }).eq('id', id)
         if (error) throw error
-        toast.success('Usuario actualizado')
+        await successAlert('¡Usuario Actualizado!', 'Los datos se guardaron correctamente.')
       } else {
         // Fix: Create users without logging out admin
         // We use a secondary client with persistSession: false
@@ -104,7 +105,7 @@ export default function UsuarioForm() {
             cliente_id: form.rol === 'cliente' ? form.cliente_id || null : null,
           }).eq('id', authData.user.id)
         }
-        toast.success('Usuario creado exitosamente')
+        await successAlert('¡Usuario Creado!', 'El usuario ha sido registrado en el sistema.')
       }
       navigate('/admin/usuarios')
     } catch (err) {
@@ -115,12 +116,17 @@ export default function UsuarioForm() {
   }
 
   async function handleDelete() {
-    if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción solo borrará su perfil, no su cuenta de acceso de Supabase.')) return
+    const isConfirmed = await confirmDelete(
+      '¿Eliminar usuario?', 
+      'Esta acción solo borrará su perfil, no su cuenta de acceso de Supabase.'
+    )
+    if (!isConfirmed) return
+
     setSaving(true)
     try {
       const { error } = await supabase.from('profiles').delete().eq('id', id)
       if (error) throw error
-      toast.success('Usuario eliminado')
+      await successAlert('Eliminado', 'El usuario ha sido eliminado correctamente.')
       navigate('/admin/usuarios')
     } catch (err) {
       toast.error('Error al eliminar: ' + err.message)

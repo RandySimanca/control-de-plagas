@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { ArrowLeft, Save, Loader2, Building2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { successAlert } from '../../lib/alerts'
 
 export default function EmpresaForm() {
   const { id } = useParams()
@@ -62,7 +63,7 @@ export default function EmpresaForm() {
         }).eq('id', id)
         
         if (error) throw error
-        toast.success('Empresa actualizada')
+        await successAlert('¡Actualizada!', 'Empresa actualizada correctamente')
       } else {
         // Validaciones al crear
         if (!form.admin_email || !form.admin_password || !form.admin_nombre) {
@@ -104,7 +105,7 @@ export default function EmpresaForm() {
         if (authError) {
           toast.error('Empresa creada, pero falló la creación del admin: ' + authError.message)
         } else {
-          toast.success('Empresa creada exitosamente con su administrador')
+          await successAlert('¡Empresa Creada!', 'Empresa creada exitosamente con su administrador')
         }
       }
       navigate('/superadmin')

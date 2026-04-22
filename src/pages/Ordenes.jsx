@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Plus, Search, Calendar, User, ChevronRight, Trash2, ClipboardList } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { confirmDelete, successAlert } from '../lib/alerts'
 
 export default function Ordenes() {
   const { isAdmin, profile } = useAuth()
@@ -21,13 +22,14 @@ export default function Ordenes() {
     e.preventDefault()
     e.stopPropagation()
     
-    if (!confirm('¿Estás seguro de eliminar esta orden? Se borrarán todos los datos asociados.')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar esta orden?', 'Se borrarán todos los datos asociados.')
+    if (!isConfirmed) return
     
     try {
       const { error } = await supabase.from('ordenes_servicio').delete().eq('id', id)
       if (error) throw error
       setOrdenes(ordenes.filter(o => o.id !== id))
-      toast.success('Orden eliminada')
+      await successAlert('Eliminada', 'La orden de servicio ha sido eliminada.')
     } catch (err) {
       toast.error('Error al eliminar: ' + err.message)
     }

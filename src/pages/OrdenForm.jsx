@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams, Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { ArrowLeft, Save, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Plus, Trash2, Calendar as CalIcon, MapPin, User, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { successAlert } from '../lib/alerts'
 
 export default function OrdenForm() {
    const { id } = useParams()
@@ -133,7 +134,7 @@ export default function OrdenForm() {
           .eq('id', form.solicitud_id)
       }
 
-      toast.success(isEdit ? 'Orden actualizada' : 'Orden creada')
+      await successAlert(isEdit ? '¡Orden actualizada!' : '¡Orden creada!', isEdit ? 'La orden se guardó con éxito.' : 'La nueva orden se ha generado y asignado.')
       navigate(`/ordenes/${ordenId}`)
     } catch (err) {
       toast.error('Error: ' + err.message)

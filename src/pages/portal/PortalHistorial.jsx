@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
+import { confirmDelete, successAlert } from '../../lib/alerts'
 
 export default function PortalHistorial() {
   const { profile, logout, licenseWarning } = useAuth()
@@ -62,12 +63,13 @@ export default function PortalHistorial() {
   }
 
   async function handleDeleteSolicitud(id) {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta solicitud? Ya no aparecerá en tu historial.')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro?', 'Ya no aparecerá en tu historial.')
+    if (!isConfirmed) return
     
     try {
       const { error } = await supabase.from('solicitudes_servicio').delete().eq('id', id)
       if (error) throw error
-      toast.success('Solicitud eliminada correctamente')
+      await successAlert('¡Eliminada!', 'Solicitud eliminada correctamente')
       setSolicitudes(solicitudes.filter(s => s.id !== id))
     } catch {
       toast.error('No se pudo eliminar la solicitud')

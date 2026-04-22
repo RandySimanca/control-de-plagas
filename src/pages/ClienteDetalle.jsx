@@ -7,6 +7,7 @@ import {
   ClipboardList, Building2, Home
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { confirmDelete, successAlert } from '../lib/alerts'
 
 export default function ClienteDetalle() {
   const { id } = useParams()
@@ -36,10 +37,11 @@ export default function ClienteDetalle() {
   }
 
   async function handleDelete() {
-    if (!confirm('¿Estás seguro de eliminar este cliente?')) return
+    const isConfirmed = await confirmDelete('¿Estás seguro de eliminar este cliente?', 'Perderás el acceso directo a su información.')
+    if (!isConfirmed) return
     try {
       await supabase.from('clientes').update({ activo: false }).eq('id', id)
-      toast.success('Cliente eliminado')
+      await successAlert('Cliente eliminado', 'El cliente ha sido desactivado correctamente.')
       navigate('/clientes')
     } catch { toast.error('Error al eliminar') }
   }

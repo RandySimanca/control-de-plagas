@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { ArrowLeft, Save, Loader2, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { successAlert } from '../lib/alerts'
 
 export default function ClienteForm() {
   const { id } = useParams()
@@ -95,10 +96,10 @@ export default function ClienteForm() {
               cliente_id: id,
               activo: true
             }).eq('id', authData.user.id)
-            toast.success('Cliente actualizado y cuenta de acceso creada')
+            await successAlert('¡Cliente Actualizado!', 'Se actualizó el cliente y se creó su cuenta de acceso.')
           }
         } else {
-          toast.success('Cliente actualizado')
+          await successAlert('¡Cliente Actualizado!', 'Los datos del cliente se actualizaron correctamente.')
         }
       } else {
         const { data: newCliente, error } = await supabase.from('clientes').insert({
@@ -140,10 +141,10 @@ export default function ClienteForm() {
               cliente_id: newCliente.id,
               activo: true
             }).eq('id', authData.user.id)
-            toast.success('Cliente y cuenta de acceso creados exitosamente')
+            await successAlert('¡Cliente Creado!', 'Se creó el cliente y su cuenta de acceso exitosamente.')
           }
         } else {
-          toast.success('Cliente creado')
+          await successAlert('¡Cliente Creado!', 'El nuevo cliente se ha registrado con éxito.')
         }
       }
       navigate('/clientes')
