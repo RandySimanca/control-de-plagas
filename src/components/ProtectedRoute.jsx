@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (!user) return <Navigate to="/login" replace />
-  
+
   // Si se requieren roles pero no hay perfil, redirigir al login
   if (allowedRoles && !profile) return <Navigate to="/login" replace />
 
@@ -36,7 +36,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Licencia Suspendida</h2>
           <p className="text-slate-300 mb-6">
-            El acceso al sistema ha sido bloqueado. Por favor, contacta con el proveedor de tu sistema para regularizar el estado de tu licencia SaaS.
+            El acceso al sistema ha sido bloqueado. Por favor, contacta con el proveedor de tu sistema para regularizar el estado de tu licencia.
           </p>
         </div>
       </div>
