@@ -22,6 +22,7 @@ export default function DocumentosLegales() {
       if (error) throw error
       setDocumentos(data || [])
     } catch (err) {
+      console.error(err)
       toast.error('Error cargando documentos')
     } finally {
       setLoading(false)
@@ -89,6 +90,7 @@ export default function DocumentosLegales() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (err) {
+      console.error(err)
       toast.error('Error al descargar documento')
     }
   }
@@ -106,6 +108,7 @@ export default function DocumentosLegales() {
       setDocumentos(documentos.filter(d => d.id !== doc.id))
       await successAlert('Eliminado', 'El documento legal ha sido eliminado.')
     } catch (err) {
+      console.error(err)
       toast.error('Error al eliminar')
     }
   }

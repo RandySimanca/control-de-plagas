@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -21,7 +21,7 @@ export default function Layout() {
   useEffect(() => {
     if (location.pathname === '/admin/solicitudes') {
       localStorage.setItem('admin_last_viewed_solicitudes', new Date().toISOString())
-      setRequestCount(0)
+      setTimeout(() => setRequestCount(0), 0)
     }
   }, [location.pathname])
 
@@ -41,10 +41,9 @@ export default function Layout() {
     navItems.push({ to: '/admin/solicitudes', icon: ClipboardCheck, label: 'Solicitudes', badge: requestCount })
   }
 
-  async function loadRequestCount() {
+  const loadRequestCount = useCallback(async () => {
     // Si estamos en la página, no mostramos el badge
     if (location.pathname === '/admin/solicitudes') {
-      setRequestCount(0)
       return
     }
 
@@ -63,21 +62,16 @@ export default function Layout() {
       setRequestCount(count || 0)
     } catch {
       console.error('Error cargando solicitudes')
-      toast.error('No se pudieron cargar las solicitudes')
     }
-  }
+  }, [location.pathname])
 
   useEffect(() => {
     if (isAdmin) {
-      const initLoad = async () => {
-        await loadRequestCount()
-      }
-      initLoad()
-      
+      setTimeout(() => loadRequestCount(), 0)
       const interval = setInterval(loadRequestCount, 30000) // Cada 30 seg
       return () => clearInterval(interval)
     }
-  }, [isAdmin])
+  }, [isAdmin, loadRequestCount])
 
   async function handleLogout() {
     try {
