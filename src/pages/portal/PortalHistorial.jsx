@@ -5,7 +5,7 @@ import { generarCertificado as _generarCertificado, abrirCertificado } from '../
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   Bug, LogOut, ClipboardList, FileCheck, Calendar, Download,
-  CheckCircle2, Clock, Play, ChevronRight, FileText, PlusCircle, Bell, Trash2
+  CheckCircle2, Clock, Play, ChevronRight, FileText, PlusCircle, Bell, Trash2, Shield
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
@@ -20,7 +20,10 @@ export default function PortalHistorial() {
   const [certificados, setCertificados] = useState([])
   const [documentos, setDocumentos] = useState([])
   const [solicitudes, setSolicitudes] = useState([])
-  const [tab, setTab] = useState(location.state?.tab || 'historial')
+  const [tab, setTab] = useState(() => {
+    if (profile?.activo === false) return 'solicitudes'
+    return location.state?.tab || 'historial'
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -57,6 +60,12 @@ export default function PortalHistorial() {
         cotizacion_leida_por_cliente: true
       }).eq('id', sol.id)
       if (error) throw error
+
+      if (estado === 'aceptada' && profile?.activo === false) {
+        await supabase.from('clientes').update({ activo: true }).eq('id', profile.cliente_id)
+        await supabase.from('profiles').update({ activo: true }).eq('id', profile.id)
+      }
+
       toast.success('Respuesta enviada')
       window.location.reload()
     } catch { toast.error('Error al actualizar') }
@@ -163,20 +172,36 @@ export default function PortalHistorial() {
         </div>
       )}
 
+      {profile?.activo === false && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-3">
+          <div className="max-w-4xl mx-auto flex items-start gap-3">
+            <Shield className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-800">Cuenta suspendida</p>
+              <p className="text-xs text-red-700 mt-0.5">El acceso completo a la plataforma ha sido restingido. Para reactivar tu cuenta, es necesario aprobar una de tus cotizaciones pendientes o crear una nueva solicitud de servicio.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="page-title mb-1">¡Hola, {profile?.nombre_completo?.split(' ')[0]}!</h1>
         <p className="page-subtitle mb-6">Consulta tu historial de servicios y certificados</p>
 
         <div className="flex gap-1 bg-dark-100 p-1 rounded-xl mb-6 overflow-x-auto">
-          <button onClick={() => setTab('historial')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'historial' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
-            <ClipboardList className="w-4 h-4" /> Historial
-          </button>
-          <button onClick={() => setTab('certificados')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'certificados' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
-            <FileCheck className="w-4 h-4" /> Certificados
-          </button>
-          <button onClick={() => setTab('documentos')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'documentos' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
-            <FileText className="w-4 h-4" /> Documentos
-          </button>
+          {profile?.activo !== false && (
+            <>
+              <button onClick={() => setTab('historial')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'historial' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
+                <ClipboardList className="w-4 h-4" /> Historial
+              </button>
+              <button onClick={() => setTab('certificados')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'certificados' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
+                <FileCheck className="w-4 h-4" /> Certificados
+              </button>
+              <button onClick={() => setTab('documentos')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === 'documentos' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
+                <FileText className="w-4 h-4" /> Documentos
+              </button>
+            </>
+          )}
           <button onClick={() => setTab('solicitudes')} className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all relative ${tab === 'solicitudes' ? 'bg-white text-dark-900 shadow-sm' : 'text-dark-500'}`}>
             <PlusCircle className="w-4 h-4" /> Solicitudes {solicitudes.length > 0 && `(${solicitudes.length})`}
             {hasUnreadQuotes && <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full animate-ping" />}

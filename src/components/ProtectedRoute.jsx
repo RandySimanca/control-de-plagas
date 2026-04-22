@@ -15,7 +15,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   if (!user) return <Navigate to="/login" replace />
 
-  if (profile && profile.activo === false) {
+  // Si se requieren roles pero no hay perfil, redirigir al login
+  if (allowedRoles && !profile) return <Navigate to="/login" replace />
+
+  if (profile && profile.activo === false && profile.rol !== 'cliente') {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-center z-50 fixed inset-0">
         <div className="bg-slate-800 p-8 rounded-xl max-w-md w-full border border-slate-700 shadow-2xl">
@@ -35,9 +38,6 @@ export default function ProtectedRoute({ children, allowedRoles }) {
       </div>
     )
   }
-
-  // Si se requieren roles pero no hay perfil, redirigir al login
-  if (allowedRoles && !profile) return <Navigate to="/login" replace />
 
   if (allowedRoles && !allowedRoles.includes(profile.rol)) {
     if (profile.rol === 'superadmin') return <Navigate to="/superadmin" replace />
