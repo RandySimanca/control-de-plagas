@@ -83,7 +83,7 @@ export default function Dashboard() {
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="page-title">¡Hola, {profile?.nombre_completo?.split(' ')[0]}! 👋</h1>
+          <h1 className="page-title">¡Hola, {profile?.nombre_completo?.split(' ')[0]}! </h1>
           <p className="page-subtitle">
             {isAdmin ? 'Resumen de tu sistema de control de plagas' : 'Tus tareas para hoy'}
           </p>
