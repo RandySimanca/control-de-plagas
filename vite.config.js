@@ -68,13 +68,26 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        navigateFallback: 'index.html',
+        navigateFallbackAllowlist: [/^\/(?!api)/],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
+            // Cache Supabase REST reads: serve stale while revalidating so the app
+            // loads offline with the last known data.
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'supabase-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 300 }
+              cacheName: 'supabase-rest-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 10 } // 10 min
+            }
+          },
+          {
+            // Supabase Storage (fotos): NetworkFirst with long cache for offline viewing
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-storage-cache',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 } // 7 days
             }
           }
         ]

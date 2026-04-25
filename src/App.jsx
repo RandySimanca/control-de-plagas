@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { OfflineProvider } from './contexts/OfflineContext'
 import { Toaster } from 'react-hot-toast'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
@@ -117,14 +118,16 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: { borderRadius: '12px', background: '#1e293b', color: '#fff', fontSize: '14px' }
-          }}
-        />
-        <AppRoutes />
+        <OfflineProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: { borderRadius: '12px', background: '#1e293b', color: '#fff', fontSize: '14px' }
+            }}
+          />
+          <AppRoutes />
+        </OfflineProvider>
       </AuthProvider>
     </BrowserRouter>
   )

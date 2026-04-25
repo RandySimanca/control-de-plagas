@@ -3,14 +3,17 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard, Users, ClipboardList, FileCheck, UserCog,
-  Menu, X, LogOut, Shield, Bug, Download, ClipboardCheck
+  Menu, X, LogOut, Shield, Bug, Download, ClipboardCheck,
+  WifiOff, RefreshCw
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { supabase } from '../lib/supabase'
+import { useOffline } from '../contexts/OfflineContext'
 
 export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
+  const { isOnline, isSyncing, pendingCount, syncAll } = useOffline()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -92,6 +95,24 @@ export default function Layout() {
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-dark-50">
+
+      {/* Offline / Syncing Banner */}
+      {(!isOnline || isSyncing) && (
+        <div className={`fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold text-white transition-all ${
+          isSyncing ? 'bg-amber-500' : 'bg-red-500'
+        }`}>
+          {isSyncing ? (
+            <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Sincronizando {pendingCount} cambio{pendingCount !== 1 ? 's' : ''}...</>
+          ) : (
+            <><WifiOff className="w-3.5 h-3.5" /> Sin conexión — los cambios se guardarán automáticamente
+              {pendingCount > 0 && <span className="ml-1 bg-white/20 rounded px-1">{pendingCount} pendiente{pendingCount !== 1 ? 's' : ''}</span>}
+            </>
+          )}
+          {!isOnline && pendingCount > 0 && (
+            <button onClick={syncAll} className="ml-2 underline text-white/80 hover:text-white">Reintentar</button>
+          )}
+        </div>
+      )}
 
       {/* Mobile Header */}
       <header className={`md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-dark-200 z-30`}>

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import db from '../lib/db'
+import { useSyncQueue } from '../hooks/useSyncQueue'
+import { useOffline } from '../contexts/OfflineContext'
 import { useAuth } from '../contexts/AuthContext'
 import { abrirCertificado } from '../lib/generarCertificado'
 import {
@@ -41,6 +44,8 @@ export default function OrdenDetalle() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAdmin, profile } = useAuth()
+  const { isOnline } = useOffline()
+  const { queueOrExecute, queuePhoto } = useSyncQueue()
   const [orden, setOrden] = useState(null)
   const [productos, setProductos] = useState([])
   const [estaciones, setEstaciones] = useState([])
@@ -86,47 +91,76 @@ export default function OrdenDetalle() {
 
   async function load() {
     try {
-      const [ordenRes, prodsRes, fotosRes, certRes, actividadesRes, estacRes] = await Promise.all([
-        supabase.from('ordenes_servicio').select(`*, clientes(*), profiles(*)`).eq('id', id).single(),
-        supabase.from('productos_usados').select('*').eq('orden_id', id),
-        supabase.from('fotos_servicio').select('*').eq('orden_id', id),
-        supabase.from('certificados').select('*').eq('orden_id', id).maybeSingle(),
-        supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: true }),
-        supabase.from('estaciones_usadas').select('*').eq('orden_id', id)
-      ])
-
-      if (ordenRes.error) throw ordenRes.error
-      setOrden(ordenRes.data)
-      setProductos(prodsRes.data || [])
-      setEstaciones(estacRes.data || [])
-      setFotos(fotosRes.data || [])
-      setCertificado(certRes.data)
-      setActividades(actividadesRes.data || [])
-      setRecomendacionesText(ordenRes.data.recomendaciones || '')
-      
-      // Initialize stations edit state
-      const defaultTypes = ['Cebadero', 'Impacto', 'Jaula atrapavivos']
-      const currentEstaciones = estacRes.data || []
-      const initialEdit = defaultTypes.map(type => {
-        const found = currentEstaciones.find(e => e.tipo_estacion === type)
-        return {
-          tipo_estacion: type,
-          cantidad: found ? found.cantidad : 0,
-          observaciones: found ? found.observaciones : '',
-          foto_antes_url: found ? found.foto_antes_url : null,
-          foto_despues_url: found ? found.foto_despues_url : null,
-          id: found ? found.id : null,
-          active: !!found
+      if (isOnline) {
+        const [ordenRes, prodsRes, fotosRes, certRes, actividadesRes, estacRes] = await Promise.all([
+          supabase.from('ordenes_servicio').select(`*, clientes(*), profiles(*)`).eq('id', id).single(),
+          supabase.from('productos_usados').select('*').eq('orden_id', id),
+          supabase.from('fotos_servicio').select('*').eq('orden_id', id),
+          supabase.from('certificados').select('*').eq('orden_id', id).maybeSingle(),
+          supabase.from('actividades_servicio').select('*').eq('orden_id', id).order('created_at', { ascending: true }),
+          supabase.from('estaciones_usadas').select('*').eq('orden_id', id)
+        ])
+        if (ordenRes.error) throw ordenRes.error
+        const snapshot = {
+          id,
+          orden: ordenRes.data,
+          productos: prodsRes.data || [],
+          fotos: fotosRes.data || [],
+          certificado: certRes.data,
+          actividades: actividadesRes.data || [],
+          estaciones: estacRes.data || [],
+          updated_at: Date.now()
         }
-      })
-      setEstacionesEdit(initialEdit)
+        await db.ordenes.put(snapshot)
+        applySnapshot(snapshot)
+      } else {
+        const cached = await db.ordenes.get(id)
+        if (cached) {
+          applySnapshot(cached)
+        } else {
+          toast.error('No hay datos guardados offline para esta orden')
+          navigate('/ordenes')
+        }
+      }
     } catch (err) {
       console.error('Error loading order details:', err)
-      toast.error('Error cargando orden')
-      navigate('/ordenes')
+      // Fallback to cached version if available
+      const cached = await db.ordenes.get(id)
+      if (cached) {
+        applySnapshot(cached)
+        toast('Mostrando datos guardados (sin conexión)', { icon: '⚡' })
+      } else {
+        toast.error('Error cargando orden')
+        navigate('/ordenes')
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  function applySnapshot(snapshot) {
+    setOrden(snapshot.orden)
+    setProductos(snapshot.productos)
+    setEstaciones(snapshot.estaciones)
+    setFotos(snapshot.fotos)
+    setCertificado(snapshot.certificado)
+    setActividades(snapshot.actividades)
+    setRecomendacionesText(snapshot.orden?.recomendaciones || '')
+    const defaultTypes = ['Cebadero', 'Impacto', 'Jaula atrapavivos']
+    const currentEstaciones = snapshot.estaciones || []
+    const initialEdit = defaultTypes.map(type => {
+      const found = currentEstaciones.find(e => e.tipo_estacion === type)
+      return {
+        tipo_estacion: type,
+        cantidad: found ? found.cantidad : 0,
+        observaciones: found ? found.observaciones : '',
+        foto_antes_url: found ? found.foto_antes_url : null,
+        foto_despues_url: found ? found.foto_despues_url : null,
+        id: found ? found.id : null,
+        active: !!found
+      }
+    })
+    setEstacionesEdit(initialEdit)
   }
 
   async function handleDeleteOrden() {
@@ -144,17 +178,16 @@ export default function OrdenDetalle() {
 
   async function cambiarEstado(nuevoEstado) {
     try {
-      const updates = { estado: nuevoEstado, updated_at: new Date().toISOString() }
+      const updates = { id, estado: nuevoEstado, updated_at: new Date().toISOString() }
       if (nuevoEstado === 'completada') {
         updates.fecha_completada = new Date().toISOString().split('T')[0]
-        // Auto-create certificate record if it doesn't exist
         if (!certificado) {
           const folio = `PC-${Date.now().toString(36).toUpperCase()}`
-          await supabase.from('certificados').insert({ orden_id: id, folio })
+          await queueOrExecute('certificados', 'insert', { orden_id: id, folio }, id)
           setCertificado({ folio })
         }
       }
-      await supabase.from('ordenes_servicio').update(updates).eq('id', id)
+      await queueOrExecute('ordenes_servicio', 'update', updates, id)
       setOrden(prev => ({ ...prev, ...updates }))
       toast.success(`Estado cambiado a ${nuevoEstado.replace('_', ' ')}`)
     } catch (err) { 
@@ -204,7 +237,8 @@ export default function OrdenDetalle() {
   async function handleSaveEstaciones() {
     setSavingEstaciones(true)
     try {
-      const toUpsert = estacionesEdit.filter(e => e.active).map(e => ({
+      const toInsert = estacionesEdit.filter(e => e.active).map(e => ({
+        id: e.id || crypto.randomUUID(),
         orden_id: id,
         tipo_estacion: e.tipo_estacion,
         cantidad: parseInt(e.cantidad) || 0,
@@ -213,16 +247,24 @@ export default function OrdenDetalle() {
         foto_despues_url: e.foto_despues_url
       }))
 
-      // Clear existing and re-insert 
-      await supabase.from('estaciones_usadas').delete().eq('orden_id', id)
-      
-      if (toUpsert.length > 0) {
-        const { error } = await supabase.from('estaciones_usadas').insert(toUpsert)
-        if (error) throw error
+      await queueOrExecute('estaciones_usadas', 'delete', { id: `orden_${id}` }, id)
+      // Note: since delete by orden_id requires special handling, fall through to supabase when online
+      if (isOnline) {
+        await supabase.from('estaciones_usadas').delete().eq('orden_id', id)
+        if (toInsert.length > 0) {
+          const { error } = await supabase.from('estaciones_usadas').insert(toInsert)
+          if (error) throw error
+        }
+        const { data } = await supabase.from('estaciones_usadas').select('*').eq('orden_id', id)
+        setEstaciones(data || [])
+      } else {
+        // Offline: queue individual deletes via a custom operation recorded as metadata
+        await db.sync_queue.add({ table: 'estaciones_usadas', operation: 'delete_where', payload: { filter: 'orden_id', value: id }, ordenId: id, attempts: 0, createdAt: Date.now() })
+        for (const row of toInsert) {
+          await db.sync_queue.add({ table: 'estaciones_usadas', operation: 'insert', payload: row, ordenId: id, attempts: 0, createdAt: Date.now() + 1 })
+        }
+        setEstaciones(toInsert)
       }
-
-      const { data } = await supabase.from('estaciones_usadas').select('*').eq('orden_id', id)
-      setEstaciones(data || [])
       setIsEditingEstaciones(false)
       toast.success('Monitoreo de estaciones actualizado')
     } catch (err) {
@@ -236,20 +278,16 @@ export default function OrdenDetalle() {
     if (!file) return
     const type = estacionesEdit[idx].tipo_estacion
     const path = `estaciones/orden_${id}_${type}_${context}_${Date.now()}.jpg`
-    
     try {
-      const { error: upErr } = await supabase.storage.from('fotos-servicio').upload(path, file)
-      if (upErr) throw upErr
-      
-      const { data: urlData } = supabase.storage.from('fotos-servicio').getPublicUrl(path)
+      const { publicUrl, error } = await queuePhoto('fotos-servicio', path, file, file.type || 'image/jpeg')
+      if (error) throw error
       const field = context === 'antes' ? 'foto_antes_url' : 'foto_despues_url'
-      
       setEstacionesEdit(prev => prev.map((item, i) => 
-        i === idx ? { ...item, [field]: urlData.publicUrl } : item
+        i === idx ? { ...item, [field]: publicUrl } : item
       ))
-      toast.success(`Foto ${context} subida`)
+      toast.success(`Foto ${context} guardada`)
     } catch (err) {
-      toast.error('Error subiendo foto: ' + err.message)
+      toast.error('Error con foto: ' + err.message)
     }
   }
 
@@ -274,38 +312,26 @@ export default function OrdenDetalle() {
     if (!newActivity.trim()) return
     setSavingActivity(true)
     try {
-      // 1. Create activity record
-      const { data: actData, error: actErr } = await supabase
-        .from('actividades_servicio')
-        .insert({ orden_id: id, descripcion: newActivity })
-        .select()
-        .single()
-      if (actErr) throw actErr
+      const actPayload = { id: crypto.randomUUID(), orden_id: id, descripcion: newActivity, created_at: new Date().toISOString() }
+      const { data: actRows, queued } = await queueOrExecute('actividades_servicio', 'insert', actPayload, id)
+      const actData = actRows?.[0] || actPayload
 
-      // 2. Upload photos if any
       if (activityPhotos.length > 0) {
         for (const file of activityPhotos) {
           const path = `actividades/act_${id}_${Date.now()}_${file.name}`
-          const { error: upErr } = await supabase.storage.from('fotos-servicio').upload(path, file)
-          if (upErr) throw upErr
-          const { data: urlData } = supabase.storage.from('fotos-servicio').getPublicUrl(path)
-          await supabase.from('fotos_servicio').insert({
-            orden_id: id,
-            storage_path: path,
-            url: urlData.publicUrl,
-            descripcion: newActivity.substring(0, 50)
-          })
+          const dbPayload = { id: crypto.randomUUID(), orden_id: id, storage_path: path, descripcion: newActivity.substring(0, 50) }
+          const { publicUrl } = await queuePhoto('fotos-servicio', path, file, file.type, 'fotos_servicio', dbPayload, id)
+          if (!queued) {
+            setFotos(prev => [...prev, { ...dbPayload, url: publicUrl }])
+          }
         }
-        // Refresh photos
-        const { data: freshFotos } = await supabase.from('fotos_servicio').select('*').eq('orden_id', id)
-        setFotos(freshFotos || [])
       }
 
-      setActividades([actData, ...actividades])
+      setActividades(prev => [actData, ...prev])
       setNewActivity('')
       setActivityPhotos([])
       setShowActivityModal(false)
-      toast.success('Actividad registrada')
+      toast.success(queued ? 'Actividad guardada offline ⚡' : 'Actividad registrada')
     } catch (err) {
       toast.error('Error: ' + err.message)
     } finally {
@@ -318,17 +344,11 @@ export default function OrdenDetalle() {
     if (!editingActivity || !editingActivity.descripcion.trim()) return
     setSavingEditActivity(true)
     try {
-      const { error } = await supabase
-        .from('actividades_servicio')
-        .update({ descripcion: editingActivity.descripcion })
-        .eq('id', editingActivity.id)
-      
-      if (error) throw error
-      
+      const { queued } = await queueOrExecute('actividades_servicio', 'update', { id: editingActivity.id, descripcion: editingActivity.descripcion }, id)
       setActividades(actividades.map(a => a.id === editingActivity.id ? editingActivity : a))
       setShowEditActivityModal(false)
       setEditingActivity(null)
-      toast.success('Actividad actualizada')
+      toast.success(queued ? 'Actualizado offline ⚡' : 'Actividad actualizada')
     } catch (err) {
       toast.error('Error al actualizar: ' + err.message)
     } finally {
@@ -340,10 +360,10 @@ export default function OrdenDetalle() {
     const isConfirmed = await confirmDelete('¿Estás seguro de eliminar esta nota?', 'Se borrará la entrada de la bitácora.')
     if (!isConfirmed) return
     try {
-      const { error } = await supabase.from('actividades_servicio').delete().eq('id', actId)
-      if (error) throw error
+      const { queued } = await queueOrExecute('actividades_servicio', 'delete', { id: actId }, id)
       setActividades(actividades.filter(a => a.id !== actId))
-      await successAlert('¡Eliminada!', 'Nota eliminada')
+      if (!queued) await successAlert('¡Eliminada!', 'Nota eliminada')
+      else toast.success('Eliminación guardada offline ⚡')
     } catch (err) {
       toast.error('Error al eliminar nota: ' + err.message)
     }
@@ -379,35 +399,22 @@ export default function OrdenDetalle() {
     if (e) e.preventDefault()
     setSavingRecomendaciones(true)
     try {
-      // 1. Update text
-      const { error } = await supabase.from('ordenes_servicio').update({ recomendaciones: recomendacionesText }).eq('id', id)
-      if (error) throw error
+      const { queued } = await queueOrExecute('ordenes_servicio', 'update', { id, recomendaciones: recomendacionesText }, id)
 
-      // 2. Upload photos if any
       if (recommendationPhotos.length > 0) {
         for (const file of recommendationPhotos) {
           const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
           const path = `recomendaciones/rec_${id}_${Date.now()}_${safeName}`
-          const { error: upErr } = await supabase.storage.from('fotos-servicio').upload(path, file)
-          if (!upErr) {
-            const { data: urlData } = supabase.storage.from('fotos-servicio').getPublicUrl(path)
-            await supabase.from('fotos_servicio').insert({
-              orden_id: id,
-              storage_path: path,
-              url: urlData.publicUrl,
-              descripcion: 'Evidencia de recomendación técnica'
-            })
-          }
+          const dbPayload = { id: crypto.randomUUID(), orden_id: id, storage_path: path, descripcion: 'Evidencia de recomendación técnica' }
+          const { publicUrl } = await queuePhoto('fotos-servicio', path, file, file.type, 'fotos_servicio', dbPayload, id)
+          if (!queued) setFotos(prev => [...prev, { ...dbPayload, url: publicUrl }])
         }
-        // Refresh photos
-        const { data: freshFotos } = await supabase.from('fotos_servicio').select('*').eq('orden_id', id)
-        setFotos(freshFotos || [])
       }
 
       setOrden(prev => ({ ...prev, recomendaciones: recomendacionesText }))
       setShowRecomendacionesModal(false)
       setRecommendationPhotos([])
-      toast.success('Recomendaciones guardadas exitosamente')
+      toast.success(queued ? 'Guardado offline ⚡' : 'Recomendaciones guardadas exitosamente')
     } catch(err) {
       console.error(err)
       toast.error('Error guardando recomendaciones')
@@ -420,11 +427,10 @@ export default function OrdenDetalle() {
     setSavingAreas(true)
     try {
       const areaStr = selectedAreas.join(', ')
-      const { error } = await supabase.from('ordenes_servicio').update({ areas_intervenidas: areaStr }).eq('id', id)
-      if (error) throw error
+      const { queued } = await queueOrExecute('ordenes_servicio', 'update', { id, areas_intervenidas: areaStr }, id)
       setOrden(prev => ({ ...prev, areas_intervenidas: areaStr }))
       setShowAreasModal(false)
-      toast.success('Áreas intervenidas actualizadas')
+      toast.success(queued ? 'Áreas guardadas offline ⚡' : 'Áreas intervenidas actualizadas')
     } catch (err) {
        toast.error('Error al guardar áreas: ' + err.message)
     } finally {
@@ -436,11 +442,10 @@ export default function OrdenDetalle() {
     setSavingMetodos(true)
     try {
       const metStr = selectedMetodos.join(', ')
-      const { error } = await supabase.from('ordenes_servicio').update({ metodos_aplicados: metStr }).eq('id', id)
-      if (error) throw error
+      const { queued } = await queueOrExecute('ordenes_servicio', 'update', { id, metodos_aplicados: metStr }, id)
       setOrden(prev => ({ ...prev, metodos_aplicados: metStr }))
       setShowMetodosModal(false)
-      toast.success('Métodos de aplicación actualizados')
+      toast.success(queued ? 'Métodos guardados offline ⚡' : 'Métodos de aplicación actualizados')
     } catch (err) {
        toast.error('Error al guardar métodos: ' + err.message)
     } finally {
@@ -451,26 +456,18 @@ export default function OrdenDetalle() {
     if (!e.target.files || e.target.files.length === 0) return
     const files = Array.from(e.target.files)
     setUploadingFotos(true)
-    toast.loading('Subiendo fotos...', { id: 'evt-upload' })
+    toast.loading('Procesando fotos...', { id: 'evt-upload' })
     try {
       for (const file of files) {
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
         const path = `evidencias/evt_${id}_${Date.now()}_${safeName}`
-        const { error: upErr } = await supabase.storage.from('fotos-servicio').upload(path, file)
-        if (upErr) throw upErr
-        const { data: urlData } = supabase.storage.from('fotos-servicio').getPublicUrl(path)
-        await supabase.from('fotos_servicio').insert({
-          orden_id: id,
-          storage_path: path,
-          url: urlData.publicUrl,
-          descripcion: 'Evidencia general subida por técnico'
-        })
+        const dbPayload = { id: crypto.randomUUID(), orden_id: id, storage_path: path, descripcion: 'Evidencia general subida por técnico' }
+        const { publicUrl } = await queuePhoto('fotos-servicio', path, file, file.type, 'fotos_servicio', dbPayload, id)
+        setFotos(prev => [...prev, { ...dbPayload, url: publicUrl }])
       }
-      const { data: freshFotos } = await supabase.from('fotos_servicio').select('*').eq('orden_id', id)
-      setFotos(freshFotos || [])
-      toast.success('Fotos subidas con éxito')
+      toast.success('Fotos guardadas')
     } catch (err) {
-      toast.error('Error subiendo fotos: ' + err.message)
+      toast.error('Error con fotos: ' + err.message)
     } finally {
       setUploadingFotos(false)
       toast.dismiss('evt-upload')
