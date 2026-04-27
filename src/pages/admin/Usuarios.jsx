@@ -229,13 +229,15 @@ export default function Usuarios() {
                   <div>
                     <label className="label-field">Email *</label>
                     <input 
-                      className={`input-field ${isEdit ? 'bg-dark-50 opacity-70 cursor-not-allowed' : ''}`} 
+                      className="input-field" 
                       type="email" 
                       value={form.email} 
                       onChange={e => handleChange('email', e.target.value)} 
                       placeholder="correo@ejemplo.com"
-                      readOnly={isEdit}
                     />
+                    {isEdit && (
+                      <p className="text-[10px] text-dark-400 mt-1">Nota: Cambiar el correo aquí no afecta las credenciales de acceso de Supabase.</p>
+                    )}
                   </div>
                   {!isEdit && (
                     <div>
