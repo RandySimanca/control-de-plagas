@@ -69,7 +69,11 @@ function AppRoutes() {
           <Layout />
         </ProtectedRoute>
       }>
-        <Route index element={<Dashboard />} />
+        <Route index element={
+          <ProtectedRoute allowedRoles={['admin', 'tecnico']}>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
         {/* Rutas de Clientes - Solo Admin */}
         <Route path="clientes" element={<ProtectedRoute allowedRoles={['admin']}><Clientes /></ProtectedRoute>} />
         <Route path="clientes/:id" element={<ProtectedRoute allowedRoles={['admin']}><ClienteDetalle /></ProtectedRoute>} />

@@ -40,7 +40,11 @@ export default function Login() {
       }
 
       toast.success('¡Bienvenido!')
-      navigate('/')
+      if (profile?.rol === 'superadmin') {
+        navigate('/superadmin')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       console.error('Login error:', err)
       toast.error(err.message === 'Invalid login credentials'
