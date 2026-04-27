@@ -62,7 +62,7 @@ export default function Usuarios() {
 
   async function openModal(id = null) {
     setEditingId(id)
-    setForm({ ...EMPTY_FORM })
+    setForm({ ...EMPTY_FORM, rol: isSuperadmin ? 'superadmin' : 'tecnico' })
     setSignatureFile(null)
     loadClientes()
     setShowModal(true)
@@ -199,7 +199,10 @@ export default function Usuarios() {
   }
 
   const filtered = usuarios.filter(u => {
+    // Hide superadmin from non-superadmins
     if (!isSuperadmin && u.rol?.toLowerCase() === 'superadmin') return false
+    // Hide non-superadmins from superadmins
+    if (isSuperadmin && u.rol?.toLowerCase() !== 'superadmin') return false
 
     const nombre = u.nombre_completo?.toLowerCase() || ''
     const email = u.email?.toLowerCase() || ''
@@ -280,10 +283,15 @@ export default function Usuarios() {
                   <div>
                     <label className="label-field">Rol *</label>
                     <select className="input-field" value={form.rol} onChange={e => handleChange('rol', e.target.value)} disabled={isEdit && profile?.id === editingId}>
-                      {isSuperadmin && <option value="superadmin">Super Administrador</option>}
-                      <option value="admin">Administrador</option>
-                      <option value="tecnico">Técnico</option>
-                      <option value="cliente">Cliente</option>
+                      {isSuperadmin ? (
+                        <option value="superadmin">Super Administrador</option>
+                      ) : (
+                        <>
+                          <option value="admin">Administrador</option>
+                          <option value="tecnico">Técnico</option>
+                          <option value="cliente">Cliente</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>
@@ -377,7 +385,7 @@ export default function Usuarios() {
             />
           </div>
           <div className="flex gap-2">
-            {['todos', ...(isSuperadmin ? ['superadmin'] : []), 'admin', 'tecnico', 'cliente'].map(rol => (
+            {(isSuperadmin ? ['todos', 'superadmin'] : ['todos', 'admin', 'tecnico', 'cliente']).map(rol => (
               <button
                 key={rol} onClick={() => setFiltroRol(rol)}
                 className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
