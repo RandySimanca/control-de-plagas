@@ -53,7 +53,7 @@ export default function Tecnicos() {
           <h1 className="page-title">Técnicos</h1>
           <p className="page-subtitle">{tecnicos.length} técnicos registrados</p>
         </div>
-        <Link to="/admin/usuarios/nuevo" className="btn-primary text-sm">
+        <Link to="/admin/usuarios" state={{ openModal: true }} className="btn-primary text-sm">
           <UserCog className="w-4 h-4" /> Nuevo Técnico
         </Link>
       </div>

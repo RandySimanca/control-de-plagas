@@ -103,9 +103,10 @@ export default function Solicitudes() {
   }
 
   function handleConvertirAOrden(sol) {
-    // Pasar datos a la página de nueva orden
-    navigate('/ordenes/nueva', {
+    // Navigar a la página de órdenes con estado para abrir el modal
+    navigate('/ordenes', {
       state: {
+        openModal: true,
         prefill: {
           cliente_id: sol.cliente_id,
           tipo_plaga: sol.tipo_servicio,

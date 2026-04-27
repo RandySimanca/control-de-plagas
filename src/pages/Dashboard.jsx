@@ -90,10 +90,10 @@ export default function Dashboard() {
         </div>
         {isAdmin && (
           <div className="flex gap-2">
-            <Link to="/clientes/nuevo" className="btn-secondary text-sm">
+            <Link to="/clientes" state={{ openModal: true }} className="btn-secondary text-sm">
               <Plus className="w-4 h-4" /> Nuevo Cliente
             </Link>
-            <Link to="/ordenes/nueva" className="btn-primary text-sm">
+            <Link to="/ordenes" state={{ openModal: true }} className="btn-primary text-sm">
               <Plus className="w-4 h-4" /> Nueva Orden
             </Link>
           </div>

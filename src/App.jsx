@@ -7,14 +7,11 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Clientes from './pages/Clientes'
-import ClienteForm from './pages/ClienteForm'
 import ClienteDetalle from './pages/ClienteDetalle'
 import Ordenes from './pages/Ordenes'
-import OrdenForm from './pages/OrdenForm'
 import OrdenDetalle from './pages/OrdenDetalle'
 import Certificados from './pages/Certificados'
 import Usuarios from './pages/admin/Usuarios'
-import UsuarioForm from './pages/admin/UsuarioForm'
 import Tecnicos from './pages/admin/Tecnicos'
 import PortalLogin from './pages/portal/PortalLogin'
 import PortalHistorial from './pages/portal/PortalHistorial'
@@ -75,24 +72,14 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         {/* Rutas de Clientes - Solo Admin */}
         <Route path="clientes" element={<ProtectedRoute allowedRoles={['admin']}><Clientes /></ProtectedRoute>} />
-        <Route path="clientes/nuevo" element={<ProtectedRoute allowedRoles={['admin']}><ClienteForm /></ProtectedRoute>} />
         <Route path="clientes/:id" element={<ProtectedRoute allowedRoles={['admin']}><ClienteDetalle /></ProtectedRoute>} />
-        <Route path="clientes/:id/editar" element={<ProtectedRoute allowedRoles={['admin']}><ClienteForm /></ProtectedRoute>} />
         <Route path="ordenes" element={<Ordenes />} />
-        <Route path="ordenes/nueva" element={<OrdenForm />} />
         <Route path="ordenes/:id" element={<OrdenDetalle />} />
-        <Route path="ordenes/:id/editar" element={<OrdenForm />} />
         <Route path="certificados" element={<Certificados />} />
 
         {/* Admin */}
         <Route path="admin/usuarios" element={
           <ProtectedRoute allowedRoles={['admin']}><Usuarios /></ProtectedRoute>
-        } />
-        <Route path="admin/usuarios/nuevo" element={
-          <ProtectedRoute allowedRoles={['admin']}><UsuarioForm /></ProtectedRoute>
-        } />
-        <Route path="admin/usuarios/:id" element={
-          <ProtectedRoute allowedRoles={['admin']}><UsuarioForm /></ProtectedRoute>
         } />
         <Route path="admin/tecnicos" element={
           <ProtectedRoute allowedRoles={['admin']}><Tecnicos /></ProtectedRoute>

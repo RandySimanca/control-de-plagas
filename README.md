@@ -51,10 +51,16 @@
   - Firma digital del técnico
   - Cabeceras con metadatos de versión y paginación en todas las páginas internas
 
-### 📲 PWA (Progressive Web App)
+### 🖥️ Interfaz Moderna y Flujos en Modales
+- **Arquitectura de Modales In-place**: Todos los flujos de creación y edición (Órdenes, Clientes, Usuarios, Empresas) se manejan sobre la misma vista actual usando modales con fondo difuminado (backdrop blur), evitando saltos de navegación y garantizando el foco en la tarea.
+- **Diseño Dinámico**: Interfaces reactivas con retroalimentación inmediata (toasts y badges por color según estado) para fluidez de uso.
+
+### 📲 PWA (Progressive Web App) y Sincronización Offline 📡
 - Instalable en dispositivos móviles y de escritorio.
-- Service Worker con caché de activos y estrategia Network-First para Supabase.
-- Botón de instalación inteligente con modo debug para pruebas en desarrollo.
+- **Service Worker**: Cache de dependencias vitales e imágenes garantizando un inicio offline ultrarápido.
+- **Modo Offline Real (Dexie.js)**: Persistencia en IndexedDB cuando el técnico en campo pierde la señal, guardando colas de mutaciones de datos y fotos.
+- **Background Sync**: Tan pronto regresa la conexión de datos o WiFi, el sistema vacía en background la cola offline sincronizando de nuevo con Supabase.
+- Botón de instalación inteligente con notificaciones de conectividad en interfaz.
 
 ---
 
