@@ -38,10 +38,12 @@ export default function Layout() {
     return true
   })
 
-  if (isAdmin) {
+  if (isAdmin || isSuperadmin) {
     navItems.push({ to: '/admin/usuarios', icon: UserCog, label: 'Usuarios' })
     navItems.push({ to: '/admin/configuracion', icon: Shield, label: 'Configuración' })
-    navItems.push({ to: '/admin/solicitudes', icon: ClipboardCheck, label: 'Solicitudes', badge: requestCount })
+    if (isAdmin) {
+      navItems.push({ to: '/admin/solicitudes', icon: ClipboardCheck, label: 'Solicitudes', badge: requestCount })
+    }
   }
 
   const loadRequestCount = useCallback(async () => {
@@ -69,12 +71,12 @@ export default function Layout() {
   }, [location.pathname])
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin || isSuperadmin) {
       setTimeout(() => loadRequestCount(), 0)
       const interval = setInterval(loadRequestCount, 30000) // Cada 30 seg
       return () => clearInterval(interval)
     }
-  }, [isAdmin, loadRequestCount])
+  }, [isAdmin, isSuperadmin, loadRequestCount])
 
   async function handleLogout() {
     try {

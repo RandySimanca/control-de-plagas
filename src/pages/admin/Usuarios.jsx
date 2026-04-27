@@ -72,9 +72,14 @@ export default function Usuarios() {
       try {
         const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single()
         if (error) throw error
+        
+        if (!isSuperadmin && data.rol?.toLowerCase() === 'superadmin') {
+          throw new Error('No tienes permisos para ver o editar este usuario')
+        }
+        
         setForm({ ...data, password: '' })
-      } catch {
-        toast.error('Error cargando usuario')
+      } catch (err) {
+        toast.error(err.message || 'Error cargando usuario')
         setShowModal(false)
       } finally {
         setModalLoading(false)
@@ -194,7 +199,7 @@ export default function Usuarios() {
   }
 
   const filtered = usuarios.filter(u => {
-    if (!isSuperadmin && u.rol === 'superadmin') return false
+    if (!isSuperadmin && u.rol?.toLowerCase() === 'superadmin') return false
 
     const nombre = u.nombre_completo?.toLowerCase() || ''
     const email = u.email?.toLowerCase() || ''
