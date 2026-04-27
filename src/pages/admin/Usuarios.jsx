@@ -198,12 +198,15 @@ export default function Usuarios() {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  const filtered = usuarios.filter(u => {
+  const baseUsuarios = usuarios.filter(u => {
     // Hide superadmin from non-superadmins
     if (!isSuperadmin && u.rol?.toLowerCase() === 'superadmin') return false
     // Hide non-superadmins from superadmins
     if (isSuperadmin && u.rol?.toLowerCase() !== 'superadmin') return false
+    return true
+  })
 
+  const filtered = baseUsuarios.filter(u => {
     const nombre = u.nombre_completo?.toLowerCase() || ''
     const email = u.email?.toLowerCase() || ''
     const searchTerm = search.toLowerCase()
@@ -368,7 +371,7 @@ export default function Usuarios() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="page-title">Gestión de Usuarios</h1>
-            <p className="page-subtitle">{usuarios.length} usuarios en el sistema</p>
+            <p className="page-subtitle">{baseUsuarios.length} usuarios registrados</p>
           </div>
           <button onClick={() => openModal()} className="btn-primary text-sm">
             <Plus className="w-4 h-4" /> Nuevo Usuario
