@@ -14,6 +14,7 @@ export default function DocumentosLegales() {
   useEffect(() => { load() }, [])
 
   async function load() {
+    setLoading(true)
     try {
       const { data, error } = await supabase
         .from('documentos_legales')
@@ -49,15 +50,19 @@ export default function DocumentosLegales() {
         .from('documentos')
         .getPublicUrl(filePath)
 
-      const { error: dbError } = await supabase
+      const { data: newDoc, error: dbError } = await supabase
         .from('documentos_legales')
         .insert({
           nombre: nombre.trim(),
           url: publicUrl,
           storage_path: filePath
         })
+        .select()
+        .single()
 
       if (dbError) throw dbError
+
+      setDocumentos(prev => [newDoc, ...prev])
 
       await successAlert('¡Subido!', 'Documento subido con éxito')
       setNombre('')

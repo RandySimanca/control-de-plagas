@@ -143,6 +143,7 @@ export default function Usuarios() {
         }
         await successAlert('¡Usuario Creado!', 'El usuario ha sido registrado en el sistema.')
       }
+      setSignatureFile(null)
       closeModal()
       load() // recargar lista
     } catch (err) {

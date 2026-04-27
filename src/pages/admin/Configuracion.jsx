@@ -67,6 +67,7 @@ export default function Configuracion() {
 
       if (dbError) throw dbError
       setForm(prev => ({ ...prev, logo_url: logoUrl }))
+      setLogo(null) // Limpiar la vista previa local para mostrar la URL final
       toast.success('Configuración guardada')
     } catch (err) {
       toast.error('Error: ' + err.message)
