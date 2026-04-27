@@ -14,7 +14,7 @@ const EMPTY_FORM = {
 }
 
 export default function Usuarios() {
-  const { profile } = useAuth()
+  const { profile, isSuperadmin } = useAuth()
   const location = useLocation()
   const [usuarios, setUsuarios] = useState([])
   const [search, setSearch] = useState('')
@@ -93,8 +93,9 @@ export default function Usuarios() {
     setSaving(true)
 
     try {
+      let firmaUrl = form.firma_url
+      
       if (isEdit) {
-        let firmaUrl = form.firma_url
         if (signatureFile) {
           const path = `perfiles/firma_${editingId}_${Date.now()}`
           const { error: upErr } = await supabase.storage.from('documentos').upload(path, signatureFile)
@@ -104,7 +105,7 @@ export default function Usuarios() {
           }
         }
 
-        const { error } = await supabase.from('profiles').update({
+        const { data: updatedUser, error } = await supabase.from('profiles').update({
           nombre_completo: form.nombre_completo, 
           email: form.email,
           telefono: form.telefono,
@@ -114,8 +115,9 @@ export default function Usuarios() {
           activo: form.activo,
           cliente_id: form.rol === 'cliente' ? form.cliente_id || null : null,
           updated_at: new Date().toISOString()
-        }).eq('id', editingId)
+        }).eq('id', editingId).select().single()
         if (error) throw error
+        setUsuarios(prev => prev.map(u => u.id === editingId ? updatedUser : u))
         await successAlert('¡Usuario Actualizado!', 'Los datos se guardaron correctamente.')
       } else {
         const tempSupabase = createClient(
@@ -134,12 +136,25 @@ export default function Usuarios() {
         if (authError) throw authError
 
         if (authData.user) {
-          await supabase.from('profiles').update({
+          // Si es técnico y hay firma, subirla ahora
+          if (signatureFile) {
+            const path = `perfiles/firma_${authData.user.id}_${Date.now()}`
+            const { error: upErr } = await supabase.storage.from('documentos').upload(path, signatureFile)
+            if (!upErr) {
+              const { data: urlData } = supabase.storage.from('documentos').getPublicUrl(path)
+              firmaUrl = urlData.publicUrl
+            }
+          }
+
+          const { data: newUser, error: profileError } = await supabase.from('profiles').update({
             telefono: form.telefono,
             especialidad: form.especialidad,
             activo: form.activo,
+            firma_url: firmaUrl,
             cliente_id: form.rol === 'cliente' ? form.cliente_id || null : null,
-          }).eq('id', authData.user.id)
+          }).eq('id', authData.user.id).select().single()
+          if (profileError) throw profileError
+          if (newUser) setUsuarios(prev => [newUser, ...prev])
         }
         await successAlert('¡Usuario Creado!', 'El usuario ha sido registrado en el sistema.')
       }
@@ -179,6 +194,8 @@ export default function Usuarios() {
   }
 
   const filtered = usuarios.filter(u => {
+    if (!isSuperadmin && u.rol === 'superadmin') return false
+
     const nombre = u.nombre_completo?.toLowerCase() || ''
     const email = u.email?.toLowerCase() || ''
     const searchTerm = search.toLowerCase()
@@ -187,12 +204,14 @@ export default function Usuarios() {
   })
 
   const rolIcons = {
+    superadmin: <Shield className="w-4 h-4 text-emerald-500" />,
     admin: <Shield className="w-4 h-4 text-red-500" />,
     tecnico: <UserCog className="w-4 h-4 text-blue-500" />,
     cliente: <UsersIcon className="w-4 h-4 text-purple-500" />,
   }
 
   const rolColors = {
+    superadmin: 'bg-emerald-100 text-emerald-800',
     admin: 'bg-red-100 text-red-800',
     tecnico: 'bg-blue-100 text-blue-800',
     cliente: 'bg-purple-100 text-purple-800',
@@ -256,6 +275,7 @@ export default function Usuarios() {
                   <div>
                     <label className="label-field">Rol *</label>
                     <select className="input-field" value={form.rol} onChange={e => handleChange('rol', e.target.value)} disabled={isEdit && profile?.id === editingId}>
+                      {isSuperadmin && <option value="superadmin">Super Administrador</option>}
                       <option value="admin">Administrador</option>
                       <option value="tecnico">Técnico</option>
                       <option value="cliente">Cliente</option>
@@ -352,14 +372,14 @@ export default function Usuarios() {
             />
           </div>
           <div className="flex gap-2">
-            {['todos', 'admin', 'tecnico', 'cliente'].map(rol => (
+            {['todos', ...(isSuperadmin ? ['superadmin'] : []), 'admin', 'tecnico', 'cliente'].map(rol => (
               <button
                 key={rol} onClick={() => setFiltroRol(rol)}
                 className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   filtroRol === rol ? 'bg-primary-600 text-white' : 'bg-white border border-dark-200 text-dark-600 hover:bg-dark-50'
                 }`}
               >
-                {rol === 'todos' ? 'Todos' : rol.charAt(0).toUpperCase() + rol.slice(1) + 's'}
+                {rol === 'todos' ? 'Todos' : rol === 'superadmin' ? 'Superadmin' : rol.charAt(0).toUpperCase() + rol.slice(1) + 's'}
               </button>
             ))}
           </div>

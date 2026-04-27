@@ -98,13 +98,14 @@ export default function Clientes() {
     setSaving(true)
     try {
       if (isEdit) {
-        const { error } = await supabase.from('clientes').update({
+        const { data: updatedCliente, error } = await supabase.from('clientes').update({
           nombre: form.nombre, razon_social: form.razon_social, identificacion: form.identificacion,
           direccion: form.direccion, telefono: form.telefono, email: form.email,
           nombre_contacto: form.nombre_contacto, telefono_contacto: form.telefono_contacto,
           tipo: form.tipo, notas: form.notas, updated_at: new Date().toISOString()
-        }).eq('id', editingId)
+        }).eq('id', editingId).select().single()
         if (error) throw error
+        setClientes(prev => prev.map(c => c.id === editingId ? updatedCliente : c))
 
         if (crearUsuario && !tieneUsuario && form.email && userPassword) {
           const tempSupabase = createClient(
@@ -131,9 +132,11 @@ export default function Clientes() {
           nombre: form.nombre, razon_social: form.razon_social, identificacion: form.identificacion,
           direccion: form.direccion, telefono: form.telefono, email: form.email,
           nombre_contacto: form.nombre_contacto, telefono_contacto: form.telefono_contacto,
-          tipo: form.tipo, notas: form.notas
+          tipo: form.tipo, notas: form.notas, 
+          activo: true
         }]).select().single()
         if (error) throw error
+        setClientes(prev => [newCliente, ...prev])
 
         if (crearUsuario && form.email && userPassword) {
           const tempSupabase = createClient(
