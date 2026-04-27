@@ -28,20 +28,27 @@ export default function Layout() {
     }
   }, [location.pathname])
 
-  const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Panel' },
-    { to: '/clientes', icon: Users, label: 'Clientes' },
-    { to: '/ordenes', icon: ClipboardList, label: 'Órdenes' },
-    { to: '/certificados', icon: FileCheck, label: 'Certificados' },
-  ].filter(item => {
-    if (item.to === '/clientes' && profile?.rol === 'tecnico') return false
-    return true
-  })
+  let navItems = []
 
-  if (isAdmin || isSuperadmin) {
-    navItems.push({ to: '/admin/usuarios', icon: UserCog, label: 'Usuarios' })
-    navItems.push({ to: '/admin/configuracion', icon: Shield, label: 'Configuración' })
+  if (isSuperadmin) {
+    navItems = [
+      { to: '/superadmin', icon: LayoutDashboard, label: 'Panel SaaS' },
+      { to: '/admin/usuarios', icon: UserCog, label: 'Usuarios' }
+    ]
+  } else {
+    navItems = [
+      { to: '/', icon: LayoutDashboard, label: 'Panel' },
+      { to: '/clientes', icon: Users, label: 'Clientes' },
+      { to: '/ordenes', icon: ClipboardList, label: 'Órdenes' },
+      { to: '/certificados', icon: FileCheck, label: 'Certificados' },
+    ].filter(item => {
+      if (item.to === '/clientes' && profile?.rol === 'tecnico') return false
+      return true
+    })
+
     if (isAdmin) {
+      navItems.push({ to: '/admin/usuarios', icon: UserCog, label: 'Usuarios' })
+      navItems.push({ to: '/admin/configuracion', icon: Shield, label: 'Configuración' })
       navItems.push({ to: '/admin/solicitudes', icon: ClipboardCheck, label: 'Solicitudes', badge: requestCount })
     }
   }

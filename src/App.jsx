@@ -65,7 +65,7 @@ function AppRoutes() {
 
       {/* App Principal */}
       <Route element={
-        <ProtectedRoute allowedRoles={['admin', 'tecnico']}>
+        <ProtectedRoute allowedRoles={['admin', 'tecnico', 'superadmin']}>
           <Layout />
         </ProtectedRoute>
       }>
@@ -79,7 +79,7 @@ function AppRoutes() {
 
         {/* Admin */}
         <Route path="admin/usuarios" element={
-          <ProtectedRoute allowedRoles={['admin']}><Usuarios /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['admin', 'superadmin']}><Usuarios /></ProtectedRoute>
         } />
         <Route path="admin/tecnicos" element={
           <ProtectedRoute allowedRoles={['admin']}><Tecnicos /></ProtectedRoute>
