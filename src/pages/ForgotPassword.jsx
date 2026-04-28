@@ -53,10 +53,10 @@ export default function ForgotPassword() {
               <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
                 <Mail className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-dark-900">Revisa tu correo</h2>
+              <h2 className="text-xl font-bold text-dark-900">Solicitud Procesada</h2>
               <p className="text-dark-500 text-sm">
-                Hemos enviado un enlace de recuperación a <strong>{email}</strong>. 
-                Sigue las instrucciones del correo para restablecer tu contraseña.
+                Hemos procesado tu solicitud. Si existe una cuenta asociada a este correo, te enviaremos un enlace para restablecer tu contraseña.<br/><br/>
+                Por favor revisa tu bandeja de entrada y, si no lo encuentras, verifica la carpeta de spam.
               </p>
               <Link to="/login" className="btn-primary w-full block mt-6 py-3">
                 Volver a Iniciar Sesión
