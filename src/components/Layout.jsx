@@ -4,12 +4,13 @@ import { useAuth } from '../contexts/AuthContext'
 import {
   LayoutDashboard, Users, ClipboardList, FileCheck, UserCog,
   Menu, X, LogOut, Shield, Bug, Download, ClipboardCheck,
-  WifiOff, RefreshCw
+  WifiOff, RefreshCw, Key
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import { supabase } from '../lib/supabase'
 import { useOffline } from '../contexts/OfflineContext'
+import ChangePasswordModal from './ChangePasswordModal'
 
 export default function Layout() {
   const { profile, logout, isAdmin, isSuperadmin, empresa } = useAuth()
@@ -19,6 +20,7 @@ export default function Layout() {
   const location = useLocation()
   const { canInstall, isReady, promptInstall } = useInstallPrompt()
   const [requestCount, setRequestCount] = useState(0)
+  const [showPwdModal, setShowPwdModal] = useState(false)
 
   // Actualizar última vez visto cuando entra a la página
   useEffect(() => {
@@ -224,9 +226,14 @@ export default function Layout() {
               <p className="text-xs text-dark-400 capitalize">{profile?.rol}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="btn-ghost w-full justify-start text-sm text-red-600 hover:bg-red-50">
-            <LogOut className="w-4 h-4" /> Cerrar sesión
-          </button>
+          <div className="space-y-1">
+            <button onClick={() => setShowPwdModal(true)} className="btn-ghost w-full justify-start text-sm text-dark-600 hover:bg-dark-50">
+              <Key className="w-4 h-4" /> Cambiar contraseña
+            </button>
+            <button onClick={handleLogout} className="btn-ghost w-full justify-start text-sm text-red-600 hover:bg-red-50">
+              <LogOut className="w-4 h-4" /> Cerrar sesión
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -236,6 +243,8 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      <ChangePasswordModal isOpen={showPwdModal} onClose={() => setShowPwdModal(false)} />
     </div>
   )
 }

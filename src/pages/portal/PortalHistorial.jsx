@@ -5,11 +5,12 @@ import { generarCertificado as _generarCertificado, abrirCertificado } from '../
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   Bug, LogOut, ClipboardList, FileCheck, Calendar, Download,
-  CheckCircle2, Clock, Play, ChevronRight, FileText, PlusCircle, Bell, Trash2, Shield, Send, X, Loader2
+  CheckCircle2, Clock, Play, ChevronRight, FileText, PlusCircle, Bell, Trash2, Shield, Send, X, Loader2, Key
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { confirmDelete, successAlert } from '../../lib/alerts'
+import ChangePasswordModal from '../../components/ChangePasswordModal'
 
 export default function PortalHistorial() {
   const { profile, logout, licenseWarning } = useAuth()
@@ -28,6 +29,7 @@ export default function PortalHistorial() {
 
   // -- Modal State --
   const [showModal, setShowModal] = useState(false)
+  const [showPwdModal, setShowPwdModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     tipo_servicio: 'Desinsectación',
@@ -250,7 +252,14 @@ export default function PortalHistorial() {
                   <Download className="w-3.5 h-3.5" /> Instalar App
                 </button>
               )}
-              <button onClick={handleLogout} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+              <button 
+                onClick={() => setShowPwdModal(true)} 
+                className="p-2 text-dark-500 hover:text-dark-900 hover:bg-dark-100 rounded-lg transition-colors"
+                title="Cambiar Contraseña"
+              >
+                <Key className="w-5 h-5" />
+              </button>
+              <button onClick={handleLogout} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Cerrar Sesión">
                 <LogOut className="w-5 h-5" />
               </button>
             </div>
@@ -449,6 +458,8 @@ export default function PortalHistorial() {
           )}
         </div>
       </div>
+
+      <ChangePasswordModal isOpen={showPwdModal} onClose={() => setShowPwdModal(false)} />
     </>
   )
 }

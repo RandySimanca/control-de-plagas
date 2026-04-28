@@ -22,6 +22,8 @@ import DashboardSAAS from './pages/superadmin/DashboardSAAS'
 import EmpresaForm from './pages/superadmin/EmpresaForm'
 import PortalSolicitudForm from './pages/portal/PortalSolicitudForm'
 import Solicitudes from './pages/admin/Solicitudes'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function AppRoutes() {
   const { user, profile } = useAuth()
@@ -33,6 +35,8 @@ function AppRoutes() {
     <Routes>
       {/* Auth */}
       <Route path="/login" element={user && profile && profile.rol !== 'cliente' ? <Navigate to="/" /> : <Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Portal de Clientes */}
       <Route path="/portal/login" element={user && profile && profile.rol === 'cliente' ? <Navigate to="/portal" /> : <PortalLogin />} />
