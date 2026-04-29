@@ -22,7 +22,7 @@ export default function Certificados() {
         .from('certificados')
         .select(`
           *,
-          ordenes_servicio(
+          ordenes_servicio!inner(
             *, clientes(nombre, direccion, telefono, email, tipo),
             profiles!tecnico_id(nombre_completo),
             productos_usados:productos_usados(*)
@@ -31,12 +31,17 @@ export default function Certificados() {
         .order('created_at', { ascending: false })
 
       if (!isAdmin && profile?.id) {
-        query = query.filter('ordenes_servicio.tecnico_id', 'eq', profile.id)
+        // Filtro real: solo certificados donde el técnico de la orden soy yo
+        query = query.eq('ordenes_servicio.tecnico_id', profile.id)
       }
 
       const { data, error } = await query
       if (error) throw error
-      setCertificados(data || [])
+      // Filtro defensivo extra en cliente por si RLS no está habilitado aún
+      const result = (!isAdmin && profile?.id)
+        ? (data || []).filter(c => c.ordenes_servicio?.tecnico_id === profile.id)
+        : (data || [])
+      setCertificados(result)
     } catch (err) {
       console.error('Error:', err)
       toast.error('Error al cargar certificados')
