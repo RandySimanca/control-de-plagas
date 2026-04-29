@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import { X, Lock, Save, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function ChangePasswordModal({ isOpen, onClose }) {
+  const { profile } = useAuth()
+  const [currentPassword, setCurrentPassword] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -12,6 +15,10 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!currentPassword) {
+      toast.error('Ingresa tu contraseña actual para continuar')
+      return
+    }
     if (password.length < 6) {
       toast.error('La contraseña debe tener al menos 6 caracteres')
       return
@@ -20,20 +27,37 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
       toast.error('Las contraseñas no coinciden')
       return
     }
+    if (password === currentPassword) {
+      toast.error('La nueva contraseña debe ser diferente a la actual')
+      return
+    }
 
     setLoading(true)
     try {
+      // Verificar contraseña actual re-autenticando al usuario
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: profile?.email,
+        password: currentPassword
+      })
+      if (signInError) {
+        toast.error('La contraseña actual es incorrecta')
+        setLoading(false)
+        return
+      }
+
+      // Si la verificación pasa, proceder a actualizar
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
-      
+
       toast.success('Contraseña actualizada correctamente')
+      setCurrentPassword('')
+      setPassword('')
+      setPasswordConfirm('')
       onClose()
     } catch (error) {
       toast.error(error.message || 'Error al actualizar contraseña')
     } finally {
       setLoading(false)
-      setPassword('')
-      setPasswordConfirm('')
     }
   }
 
@@ -51,7 +75,19 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="label-field">Contraseña Actual</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              className="input-field"
+              placeholder="Tu contraseña actual"
+              required
+            />
+          </div>
+
           <div>
             <label className="label-field">Nueva Contraseña</label>
             <input
@@ -65,18 +101,18 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
           </div>
 
           <div>
-            <label className="label-field">Confirmar Contraseña</label>
+            <label className="label-field">Confirmar Nueva Contraseña</label>
             <input
               type="password"
               value={passwordConfirm}
               onChange={e => setPasswordConfirm(e.target.value)}
               className="input-field"
-              placeholder="Repite la contraseña"
+              placeholder="Repite la nueva contraseña"
               required
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button type="submit" disabled={loading} className="btn-primary flex-1">
               {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <><Save className="w-4 h-4" /> Guardar</>}
             </button>
