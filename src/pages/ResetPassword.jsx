@@ -37,6 +37,9 @@ export default function ResetPassword() {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
 
+      // Destruir la sesión iniciada por el token de recuperación por seguridad
+      await supabase.auth.signOut()
+
       toast.success('Contraseña actualizada correctamente')
       navigate('/login')
     } catch (err) {
