@@ -64,7 +64,7 @@ export default function ResetPassword() {
           <h2 className="text-xl font-bold text-dark-900 mb-6 flex items-center gap-2">
             <Lock className="w-5 h-5 text-primary-600" /> Nueva Contraseña
           </h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="label-field">Nueva Contraseña</label>

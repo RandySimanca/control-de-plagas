@@ -18,7 +18,12 @@ export function AuthProvider({ children }) {
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Forzar redirección al panel de cambio de contraseña cuando se trata de una recuperación
+      if (event === 'PASSWORD_RECOVERY' && window.location.pathname !== '/reset-password') {
+        window.location.href = '/reset-password' + window.location.hash
+      }
+
       setUser(session?.user ?? null)
       if (session?.user) {
         setLoading(true)
