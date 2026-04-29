@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
@@ -10,6 +11,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -21,7 +23,7 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Forzar redirección al panel de cambio de contraseña cuando se trata de una recuperación
       if (event === 'PASSWORD_RECOVERY' && window.location.pathname !== '/reset-password') {
-        window.location.href = '/reset-password' + window.location.hash
+        navigate('/reset-password' + window.location.hash)
       }
 
       setUser(session?.user ?? null)
@@ -35,7 +37,8 @@ export function AuthProvider({ children }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate])
 
   async function fetchProfile(userId) {
     try {
