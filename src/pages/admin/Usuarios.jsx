@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { createClient } from '@supabase/supabase-js'
-import { supabase } from '../../lib/supabase'
+import { supabase, supabaseAdmin } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Plus, Search, Shield, UserCog, Users as UsersIcon, UserCheck, UserX, X, Save, Loader2, Upload, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -125,13 +124,7 @@ export default function Usuarios() {
         setUsuarios(prev => prev.map(u => u.id === editingId ? updatedUser : u))
         await successAlert('¡Usuario Actualizado!', 'Los datos se guardaron correctamente.')
       } else {
-        const tempSupabase = createClient(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_ANON_KEY,
-          { auth: { persistSession: false } }
-        )
-
-        const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+        const { data: authData, error: authError } = await supabaseAdmin.auth.signUp({
           email: form.email,
           password: form.password,
           options: {
