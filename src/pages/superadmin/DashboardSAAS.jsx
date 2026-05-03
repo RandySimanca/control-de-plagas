@@ -218,7 +218,7 @@ export default function DashboardSAAS() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-dark-900">SaaS Superdashboard</h1>
+            <h1 className="text-2xl font-bold text-dark-900">Panel Administrativo</h1>
             <p className="text-dark-500 mt-1">Gestión multitenant de empresas cliente</p>
           </div>
           <button onClick={() => openModal()} className="btn-primary w-full sm:w-auto">
